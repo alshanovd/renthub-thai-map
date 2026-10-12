@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { applySearch, DEFAULT_SEARCH, hasLocation, inBounds, type Search } from "./filter";
+import {
+  applySearch,
+  DEFAULT_SEARCH,
+  hasLocation,
+  inBounds,
+  matchesSearch,
+  type Search,
+} from "./filter";
 import type { ListingSummary, PriceRange } from "./types";
 
 const amount = (min: number | null, max: number | null = min): PriceRange => ({
@@ -68,6 +75,32 @@ describe("applySearch", () => {
     const search: Search = { mode: "month", max: 15_000, call: false, sort: "price-asc" };
     expect(ids(applySearch(listings, search))).toEqual(["e", "a", "c"]);
     expect(ids(applySearch(listings, { ...search, call: true }))).toEqual(["e", "a", "c", "b"]);
+  });
+
+  it("month mode ignores daily CALL and only adds monthly CALL when the switch is on", () => {
+    const search: Search = { mode: "month", max: 16_000, call: false, sort: "price-desc" };
+    // d is daily CALL but monthly ฿16,000: matched by its monthly price only.
+    expect(ids(applySearch(listings, search))).toEqual(["d", "c", "a", "e"]);
+    expect(ids(applySearch(listings, { ...search, call: true }))).toEqual([
+      "d",
+      "c",
+      "a",
+      "e",
+      "b",
+    ]);
+  });
+
+  it("treats max = Infinity as no upper limit", () => {
+    const day: Search = { ...DEFAULT_SEARCH, max: Number.POSITIVE_INFINITY };
+    expect(ids(applySearch(listings, day))).toEqual(["h", "f", "a", "b", "c"]);
+    const month: Search = { ...day, mode: "month", call: true };
+    expect(ids(applySearch(listings, month))).toEqual(["e", "a", "c", "d", "b"]);
+  });
+
+  it("matchesSearch agrees with applySearch", () => {
+    const search: Search = { mode: "month", max: 9000, call: true, sort: "updated" };
+    const expected = ids(applySearch(listings, search)).toSorted();
+    expect(ids(listings.filter((item) => matchesSearch(item, search)))).toEqual(expected);
   });
 
   it("breaks price ties by id", () => {

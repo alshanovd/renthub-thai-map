@@ -5,14 +5,13 @@ import { Suspense, useMemo } from "react";
 import { ListingsMap } from "@/components/map/listings-map";
 import type { PinListing } from "@/components/map/price-pin";
 import { ListPanel } from "@/components/list/list-panel";
+import { SearchUrlSync } from "@/components/search-url-sync";
 import { SelectionUrlSync } from "@/components/selection-url-sync";
 import { TopBar } from "@/components/top-bar/top-bar";
-import { applySearch, DEFAULT_SEARCH, hasLocation } from "@/lib/listings/filter";
+import { applySearch, hasLocation } from "@/lib/listings/filter";
 import type { ListingsPayload } from "@/lib/listings/types";
+import { useAppliedSearch } from "@/lib/search-params";
 import { type ListTab, useMapUi } from "@/lib/store";
-
-/** Hard-coded until plan 09 reads the applied search from the URL. */
-const search = DEFAULT_SEARCH;
 
 /** Favorites arrive in plan 10; until then nobody has any. */
 const NO_FAVORITES: ReadonlySet<string> = new Set();
@@ -35,8 +34,9 @@ function pinsForTab(
 export function AppShell({ payload }: { payload: ListingsPayload }) {
   const activeTab = useMapUi((s) => s.activeTab);
   const selectedId = useMapUi((s) => s.selectedId);
+  const [search] = useAppliedSearch();
 
-  const filtered = useMemo(() => applySearch(payload.listings, search), [payload.listings]);
+  const filtered = useMemo(() => applySearch(payload.listings, search), [payload.listings, search]);
   const filteredPins = useMemo(() => filtered.filter(hasLocation), [filtered]);
   const selected = useMemo(() => {
     const listing = payload.listings.find((item) => item.id === selectedId);
@@ -49,11 +49,12 @@ export function AppShell({ payload }: { payload: ListingsPayload }) {
 
   return (
     <div className="flex h-dvh flex-col">
-      {/* `?id=` sync reads the URL on the client; Suspense keeps the rest of `/` prerendered. */}
+      {/* URL syncs (`?id=`, search) read the URL on the client; Suspense keeps `/` prerendered. */}
       <Suspense fallback={null}>
         <SelectionUrlSync />
+        <SearchUrlSync />
       </Suspense>
-      <TopBar resultCount={filtered.length} />
+      <TopBar listings={payload.listings} filtered={filtered} lastScrapeAt={payload.lastScrapeAt} />
       <div className="flex min-h-0 flex-1">
         <aside className="flex w-[420px] shrink-0 flex-col border-r">
           <ListPanel

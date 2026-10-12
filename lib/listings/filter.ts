@@ -4,10 +4,10 @@ import type { ListingSummary, PriceMode, PriceRange } from "./types";
 
 export type SortOrder = "price-asc" | "price-desc" | "updated";
 
-/** The applied search (lives in the URL from plan 09). */
+/** The applied search (lives in the URL, see `@/lib/search-params`). */
 export type Search = {
   mode: PriceMode;
-  /** Upper bound for the active mode's minimum price, in THB. */
+  /** Upper bound for the active mode's minimum price, in THB. `Infinity` means no limit. */
   max: number;
   /** Also include call-for-price listings of the active mode. */
   call: boolean;
@@ -27,7 +27,11 @@ function minAmount(range: PriceRange): number | null {
   return range.min ?? range.max ?? null;
 }
 
-function matches(listing: ListingSummary, search: Search): boolean {
+/** True when the listing passes the search's price filter (sort is irrelevant). */
+export function matchesSearch(
+  listing: ListingSummary,
+  search: Pick<Search, "mode" | "max" | "call">,
+): boolean {
   const range = modePrice(listing, search.mode);
   if (range.type === "CALL") return search.call;
   const min = minAmount(range);
@@ -49,7 +53,7 @@ function byId(a: ListingSummary, b: ListingSummary): number {
  * `updated` sorts by `refreshedAt`, newest first, nulls last.
  */
 export function applySearch(listings: readonly ListingSummary[], search: Search): ListingSummary[] {
-  const result = listings.filter((listing) => matches(listing, search));
+  const result = listings.filter((listing) => matchesSearch(listing, search));
   const price = (listing: ListingSummary) => minAmount(modePrice(listing, search.mode));
 
   if (search.sort === "updated") {
