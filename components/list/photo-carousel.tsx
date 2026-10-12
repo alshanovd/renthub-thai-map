@@ -1,11 +1,12 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
-import { type MouseEvent, useCallback, useState } from "react";
+import { type MouseEvent, useCallback } from "react";
 
 import { LazyImage } from "@/components/ui-ext/lazy-image";
 import { thumbUrl } from "@/lib/images";
 import { useMapUi } from "@/lib/store";
+import { usePhotoStepper } from "@/lib/use-photo-stepper";
 import { cn } from "@/lib/utils";
 
 type PhotoCarouselProps = {
@@ -14,27 +15,30 @@ type PhotoCarouselProps = {
   pictures: readonly string[];
 };
 
+/** Arrow click handler: steps without letting the click reach the card/marker. */
+const onStep = (go: () => void) => (event: MouseEvent) => {
+  event.stopPropagation();
+  go();
+};
+
 const arrowClass =
   "absolute top-1/2 z-10 flex size-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutral-900 shadow ring-1 ring-black/10 transition-opacity hover:bg-white focus-visible:opacity-100 opacity-0 group-hover/photo:opacity-100 max-md:opacity-100 [@media(hover:none)]:opacity-100";
 
 /**
- * 4:3 thumbnail carousel. Only the current photo and its neighbours are mounted (the next one
- * preloads while it's off to the side); all are `LazyImage`s (spinner until loaded). Clicking the photo opens the
- * fullscreen viewer. Clicks never reach the card (no selection).
+ * 4:3 thumbnail carousel with a single mounted photo (a `LazyImage`: spinner until it loads).
+ * Hovering, focusing or pressing an arrow silently preloads the neighbour on that side, and each
+ * step preloads the next one in the same direction, so stepping is instant without keeping
+ * neighbours decoded. Clicking the photo opens the fullscreen viewer. Clicks never reach the
+ * card (no selection).
  */
 export function PhotoCarousel({ listingId, pictures }: PhotoCarouselProps) {
-  const [index, setIndex] = useState(0);
+  const { index, next, prev, preload } = usePhotoStepper(pictures);
   const openViewer = useMapUi((s) => s.openViewer);
   const count = pictures.length;
 
   const stop = useCallback((event: MouseEvent) => event.stopPropagation(), []);
-  const step = useCallback(
-    (delta: number) => (event: MouseEvent) => {
-      event.stopPropagation();
-      setIndex((current) => (current + delta + count) % count);
-    },
-    [count],
-  );
+  const preloadPrev = () => preload(-1);
+  const preloadNext = () => preload(1);
 
   if (count === 0) {
     return (
@@ -43,13 +47,6 @@ export function PhotoCarousel({ listingId, pictures }: PhotoCarouselProps) {
         No photo
       </div>
     );
-  }
-
-  // Current photo plus its (wrap-around) neighbours, as [picture index, offset in slots].
-  const mounted = new Map<number, number>();
-  for (const offset of [0, 1, -1]) {
-    const i = (index + offset + count) % count;
-    if (!mounted.has(i)) mounted.set(i, offset);
   }
 
   return (
@@ -64,16 +61,7 @@ export function PhotoCarousel({ listingId, pictures }: PhotoCarouselProps) {
         aria-label={`Open photo ${String(index + 1)} of ${String(count)}`}
         onClick={() => openViewer(listingId, index)}
       >
-        {[...mounted].map(([i, offset]) => (
-          <LazyImage
-            key={i}
-            src={thumbUrl(pictures[i])}
-            alt=""
-            aria-hidden={offset !== 0}
-            className="absolute inset-0 size-full"
-            style={{ transform: `translateX(${String(offset * 100)}%)` }}
-          />
-        ))}
+        <LazyImage src={thumbUrl(pictures[index])} alt="" className="absolute inset-0 size-full" />
       </button>
       {count > 1 ? (
         <>
@@ -81,7 +69,10 @@ export function PhotoCarousel({ listingId, pictures }: PhotoCarouselProps) {
             type="button"
             className={cn(arrowClass, "left-1.5")}
             aria-label="Previous photo"
-            onClick={step(-1)}
+            onPointerEnter={preloadPrev}
+            onPointerDown={preloadPrev}
+            onFocus={preloadPrev}
+            onClick={onStep(prev)}
           >
             <ChevronLeft className="size-4" aria-hidden />
           </button>
@@ -89,7 +80,10 @@ export function PhotoCarousel({ listingId, pictures }: PhotoCarouselProps) {
             type="button"
             className={cn(arrowClass, "right-1.5")}
             aria-label="Next photo"
-            onClick={step(1)}
+            onPointerEnter={preloadNext}
+            onPointerDown={preloadNext}
+            onFocus={preloadNext}
+            onClick={onStep(next)}
           >
             <ChevronRight className="size-4" aria-hidden />
           </button>

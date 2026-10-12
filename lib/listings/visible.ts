@@ -73,3 +73,25 @@ export function computeTabCounts(input: {
     nolocation: input.noLocationTotal ?? 0,
   };
 }
+
+/** Narrowest list (px, scroll element's client width) that still shows two cards per row. */
+export const TWO_COLUMN_MIN_WIDTH = 320;
+
+/** Cards per list row for a list `width` (0 = not measured yet: assume the usual two). */
+export function listColumns(width: number): 1 | 2 {
+  return width === 0 || width >= TWO_COLUMN_MIN_WIDTH ? 2 : 1;
+}
+
+/** `items` grouped into rows of `columns` (the last row may be shorter). */
+export function chunkRows<T>(items: readonly T[], columns: number): T[][] {
+  const size = Math.max(1, Math.floor(columns));
+  const rows: T[][] = [];
+  for (let i = 0; i < items.length; i += size) rows.push(items.slice(i, i + size));
+  return rows;
+}
+
+/** Index of the row holding the item with `id`, or -1 when it isn't in the list. */
+export function rowIndexOf(items: readonly VisibleItem[], id: string, columns: number): number {
+  const index = items.findIndex((entry) => entry.id === id);
+  return index < 0 ? -1 : Math.floor(index / Math.max(1, Math.floor(columns)));
+}

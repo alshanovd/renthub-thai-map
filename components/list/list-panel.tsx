@@ -1,18 +1,16 @@
 "use client";
 
 import { RotateCw } from "lucide-react";
-import { type ReactNode, useEffect, useMemo, useRef } from "react";
+import { useMemo } from "react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Spinner } from "@/components/ui-ext/spinner";
 import type { PriceMode } from "@/lib/listings/types";
-import { computeTabCounts, computeVisibleItems, type VisibleItem } from "@/lib/listings/visible";
+import { computeTabCounts, computeVisibleItems } from "@/lib/listings/visible";
 import { useNoLocation, usePins, useSelectedPin } from "@/lib/queries";
 import { useAppliedSearch } from "@/lib/search-params";
 import { type ListTab, useMapUi } from "@/lib/store";
 
-import { ListingCard } from "./listing-card";
-import { useScrollToSelected } from "./use-scroll-to-selected";
+import { VirtualCardList } from "./virtual-card-list";
 
 type ListPanelProps = {
   mode: PriceMode;
@@ -38,7 +36,8 @@ const isListTab = (value: string): value is ListTab => TABS.some((tab) => tab.va
 /**
  * Left panel: tabs "On map" / "Favorites" / "No location" and the cards of the active tab.
  * Card ids come from the pins (On map), the favorites, or the no-location pages; each card
- * fetches its own data. It only *reads* the map bounds; it never moves the map.
+ * fetches its own data. Only the active tab's list is mounted, and it's virtualized
+ * (`VirtualCardList`). It only *reads* the map bounds; it never moves the map.
  */
 export function ListPanel({ mode, favoriteIds, onToggleFavorite }: ListPanelProps) {
   const activeTab = useMapUi((s) => s.activeTab);
@@ -50,7 +49,7 @@ export function ListPanel({ mode, favoriteIds, onToggleFavorite }: ListPanelProp
   const selectedPin = useSelectedPin(mode);
   const noLocation = useNoLocation(search, activeTab === "nolocation");
 
-  useScrollToSelected(pinsState.loaded && !pinsState.isFetching);
+  const listReady = pinsState.loaded && !pinsState.isFetching;
 
   const noLocationIds = useMemo(
     () => noLocation.data?.pages.flatMap((page) => page.listings.map((card) => card.id)) ?? [],
@@ -133,14 +132,9 @@ export function ListPanel({ mode, favoriteIds, onToggleFavorite }: ListPanelProp
         ) : null}
       </div>
       {TABS.map((tab) => (
-        <TabsContent
-          key={tab.value}
-          value={tab.value}
-          className="min-h-0 overflow-y-auto overscroll-contain"
-          data-list-scroller
-        >
+        <TabsContent key={tab.value} value={tab.value} className="flex min-h-0 flex-col">
           {tab.value === activeTab ? (
-            <CardGrid
+            <VirtualCardList
               items={items}
               markNoLocation={tab.value === "favorites"}
               mode={mode}
@@ -148,114 +142,14 @@ export function ListPanel({ mode, favoriteIds, onToggleFavorite }: ListPanelProp
               onToggleFavorite={onToggleFavorite}
               loading={loadingText(tab.value)}
               empty={EMPTY[tab.value]}
-              footer={
-                tab.value === "nolocation" && noLocation.hasNextPage ? (
-                  <LoadMore
-                    loading={noLocation.isFetchingNextPage}
-                    onVisible={() => {
-                      if (!noLocation.isFetchingNextPage) void noLocation.fetchNextPage();
-                    }}
-                  />
-                ) : null
-              }
+              listReady={listReady}
+              hasMore={tab.value === "nolocation" && noLocation.hasNextPage}
+              loadingMore={noLocation.isFetchingNextPage}
+              onLoadMore={() => void noLocation.fetchNextPage()}
             />
           ) : null}
         </TabsContent>
       ))}
     </Tabs>
-  );
-}
-
-function CardGrid({
-  items,
-  markNoLocation,
-  mode,
-  favoriteSet,
-  onToggleFavorite,
-  loading,
-  empty,
-  footer,
-}: {
-  items: readonly VisibleItem[];
-  /** Chip "No location" on cards without coordinates (Favorites tab). */
-  markNoLocation: boolean;
-  mode: PriceMode;
-  favoriteSet: ReadonlySet<string>;
-  onToggleFavorite?: (id: string) => void;
-  /** Loading text when there's nothing to show yet; null when loaded. */
-  loading: string | null;
-  empty: string;
-  footer?: ReactNode;
-}) {
-  if (items.length === 0) {
-    if (loading !== null) {
-      return (
-        <div
-          role="status"
-          aria-busy="true"
-          className="flex items-center justify-center gap-2 p-6 text-sm text-muted-foreground"
-        >
-          <Spinner />
-          {loading}
-        </div>
-      );
-    }
-    return <p className="p-6 text-center text-sm text-muted-foreground">{empty}</p>;
-  }
-  return (
-    <>
-      <div className="grid grid-cols-2 gap-x-1 gap-y-2 p-2">
-        {items.map(({ id, pin, outsideView }) => (
-          <ListingCard
-            key={id}
-            id={id}
-            pin={pin}
-            mode={mode}
-            outsideView={outsideView}
-            favorite={favoriteSet.has(id)}
-            markNoLocation={markNoLocation}
-            onToggleFavorite={onToggleFavorite}
-          />
-        ))}
-      </div>
-      {footer}
-    </>
-  );
-}
-
-/** Infinite-scroll sentinel: asks for the next page when it nears the visible area. */
-function LoadMore({ loading, onVisible }: { loading: boolean; onVisible: () => void }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const onVisibleRef = useRef(onVisible);
-  useEffect(() => {
-    onVisibleRef.current = onVisible;
-  });
-  // Re-observed after each page: a sentinel that stays in view must trigger the next page too.
-  useEffect(() => {
-    const element = ref.current;
-    if (!element || loading) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) onVisibleRef.current();
-      },
-      { rootMargin: "400px 0px" },
-    );
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [loading]);
-  return (
-    <div
-      ref={ref}
-      role="status"
-      aria-busy={loading}
-      className="flex h-12 items-center justify-center gap-2 text-xs text-muted-foreground"
-    >
-      {loading ? (
-        <>
-          <Spinner />
-          Loading more…
-        </>
-      ) : null}
-    </div>
   );
 }

@@ -3,7 +3,15 @@ import { describe, expect, it } from "vitest";
 import type { Bounds } from "@/lib/store";
 
 import type { Pin } from "./types";
-import { computeTabCounts, computeVisibleItems, pinsInView, type VisibleInput } from "./visible";
+import {
+  chunkRows,
+  computeTabCounts,
+  computeVisibleItems,
+  listColumns,
+  pinsInView,
+  rowIndexOf,
+  type VisibleInput,
+} from "./visible";
 
 function pin(id: string, overrides: Partial<Pin> = {}): Pin {
   return { id, lat: 18.79, lng: 98.98, price: 500, kind: "amount", ...overrides };
@@ -117,5 +125,29 @@ describe("computeTabCounts", () => {
     expect(
       computeTabCounts({ pins, bounds: null, favoriteIds: [], noLocationTotal: null }),
     ).toEqual({ map: 0, favorites: 0, nolocation: 0 });
+  });
+});
+
+describe("list rows", () => {
+  it("uses two columns from 320px and before the first measurement", () => {
+    expect(listColumns(0)).toBe(2);
+    expect(listColumns(404)).toBe(2);
+    expect(listColumns(320)).toBe(2);
+    expect(listColumns(319)).toBe(1);
+  });
+
+  it("chunks items into rows, the last one possibly shorter", () => {
+    expect(chunkRows(["a", "b", "c", "d", "e"], 2)).toEqual([["a", "b"], ["c", "d"], ["e"]]);
+    expect(chunkRows(["a", "b"], 1)).toEqual([["a"], ["b"]]);
+    expect(chunkRows([], 2)).toEqual([]);
+  });
+
+  it("finds the row of an id", () => {
+    const items = ["a", "b", "c", "d", "e"].map((id) => ({ id, outsideView: false, pin: null }));
+    expect(rowIndexOf(items, "a", 2)).toBe(0);
+    expect(rowIndexOf(items, "d", 2)).toBe(1);
+    expect(rowIndexOf(items, "e", 2)).toBe(2);
+    expect(rowIndexOf(items, "e", 1)).toBe(4);
+    expect(rowIndexOf(items, "zz", 2)).toBe(-1);
   });
 });

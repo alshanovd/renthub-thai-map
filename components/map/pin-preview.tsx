@@ -2,7 +2,7 @@
 
 import { AdvancedMarker } from "@vis.gl/react-google-maps";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { type MouseEvent, useCallback, useEffect, useRef, useState } from "react";
+import { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { LazyImage } from "@/components/ui-ext/lazy-image";
 import { Spinner } from "@/components/ui-ext/spinner";
@@ -11,6 +11,7 @@ import { formatPinPrice, formatPriceFull } from "@/lib/listings/format";
 import type { ListingCard, Pin, PriceMode } from "@/lib/listings/types";
 import { useCard } from "@/lib/queries";
 import { type MapUiState, useMapUi } from "@/lib/store";
+import { type StepDirection, usePhotoStepper } from "@/lib/use-photo-stepper";
 import { cn } from "@/lib/utils";
 
 const HIDE_DELAY_MS = 100;
@@ -126,6 +127,12 @@ export function PinPreview({ pinsById, mode }: PinPreviewProps) {
   );
 }
 
+/** Arrow click handler: steps without letting the click reach the card/marker. */
+const onStep = (go: () => void) => (event: MouseEvent) => {
+  event.stopPropagation();
+  go();
+};
+
 const arrowClass =
   "absolute top-1/2 z-10 flex size-6 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutral-900 shadow ring-1 ring-black/10 hover:bg-white";
 
@@ -136,24 +143,25 @@ type PreviewPhotosProps = {
 };
 
 /**
- * Small thumbnail carousel for the hover preview. Only the current photo and its neighbours are
- * mounted, so the next one preloads. Arrow presses are reported via `onNavPress`: the marker's `gmp-click` fires
- * on the marker element, outside React's propagation, so `stopPropagation` alone can't stop it.
+ * Small thumbnail carousel for the hover preview, with a single mounted photo (`LazyImage`);
+ * arrow hover/focus/press silently preloads that side's neighbour (see `usePhotoStepper`).
+ * Arrow presses are reported via `onNavPress`: the marker's `gmp-click` fires on the marker
+ * element, outside React's propagation, so `stopPropagation` alone can't stop it.
  */
 function PreviewPhotos({ listing, onNavPress }: PreviewPhotosProps) {
-  const pictures =
-    listing.pictures.length > 0 ? listing.pictures : listing.cover ? [listing.cover] : [];
-  const count = pictures.length;
-  const [index, setIndex] = useState(0);
-
-  const step = useCallback(
-    (delta: number) => (event: MouseEvent) => {
-      event.stopPropagation();
-      setIndex((current) => (current + delta + count) % count);
-    },
-    [count],
+  const pictures = useMemo(
+    () => (listing.pictures.length > 0 ? listing.pictures : listing.cover ? [listing.cover] : []),
+    [listing.pictures, listing.cover],
   );
-  const pressArrow = useCallback(() => onNavPress(true), [onNavPress]);
+  const count = pictures.length;
+  const { index, next, prev, preload } = usePhotoStepper(pictures);
+
+  const pressArrow = (dir: StepDirection) => () => {
+    onNavPress(true);
+    preload(dir);
+  };
+  const preloadPrev = () => preload(-1);
+  const preloadNext = () => preload(1);
 
   if (count === 0) {
     return (
@@ -163,38 +171,29 @@ function PreviewPhotos({ listing, onNavPress }: PreviewPhotosProps) {
     );
   }
 
-  const mounted = new Map<number, number>();
-  for (const offset of [0, 1, -1]) {
-    const i = (index + offset + count) % count;
-    if (!mounted.has(i)) mounted.set(i, offset);
-  }
-
   return (
     <div
       className="relative h-[150px] w-[200px] overflow-hidden bg-neutral-100"
       onPointerDownCapture={() => onNavPress(false)}
     >
-      {[...mounted].map(([i, offset]) => (
-        <LazyImage
-          key={i}
-          src={thumbUrl(pictures[i])}
-          alt=""
-          width={200}
-          height={150}
-          aria-hidden={offset !== 0}
-          className="absolute inset-0 size-full"
-          placeholder={<div className="absolute inset-0 bg-neutral-100" />}
-          style={{ transform: `translateX(${String(offset * 100)}%)` }}
-        />
-      ))}
+      <LazyImage
+        src={thumbUrl(pictures[index])}
+        alt=""
+        width={200}
+        height={150}
+        className="absolute inset-0 size-full"
+        placeholder={<div className="absolute inset-0 bg-neutral-100" />}
+      />
       {count > 1 ? (
         <>
           <button
             type="button"
             className={cn(arrowClass, "left-1.5")}
             aria-label="Previous photo"
-            onPointerDown={pressArrow}
-            onClick={step(-1)}
+            onPointerEnter={preloadPrev}
+            onFocus={preloadPrev}
+            onPointerDown={pressArrow(-1)}
+            onClick={onStep(prev)}
           >
             <ChevronLeft className="size-4" aria-hidden />
           </button>
@@ -202,8 +201,10 @@ function PreviewPhotos({ listing, onNavPress }: PreviewPhotosProps) {
             type="button"
             className={cn(arrowClass, "right-1.5")}
             aria-label="Next photo"
-            onPointerDown={pressArrow}
-            onClick={step(1)}
+            onPointerEnter={preloadNext}
+            onFocus={preloadNext}
+            onPointerDown={pressArrow(1)}
+            onClick={onStep(next)}
           >
             <ChevronRight className="size-4" aria-hidden />
           </button>

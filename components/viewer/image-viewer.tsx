@@ -12,6 +12,7 @@ import { fullUrl, listingUrl, thumbUrl } from "@/lib/images";
 import type { ListingSummary } from "@/lib/listings/types";
 import { useCard } from "@/lib/queries";
 import { type ViewerTarget, useMapUi } from "@/lib/store";
+import { preloadImage, preloadIndex, stepIndex } from "@/lib/use-photo-stepper";
 import { cn } from "@/lib/utils";
 
 /** Minimum horizontal travel (px) for a swipe to change the photo. */
@@ -101,23 +102,21 @@ function ViewerBody({ listing, index: rawIndex }: { listing: ListingSummary; ind
   const favorite = isFavorite(listing.id);
   const { pictures } = listing;
   const count = pictures.length;
-  const index = count > 0 ? ((rawIndex % count) + count) % count : 0;
+  const index = stepIndex(rawIndex, 0, count);
 
   const step = useCallback(
     (delta: number) => {
       if (count < 2) return;
-      openViewer(listing.id, (index + delta + count) % count);
+      openViewer(listing.id, stepIndex(index, delta, count));
     },
     [count, index, listing.id, openViewer],
   );
 
-  // Preload the neighbours' full images.
+  // Preload the neighbours' full images with detached images (never mounted, no loader).
   useEffect(() => {
-    if (count < 2) return;
-    for (const delta of [1, -1]) {
-      const image = new Image();
-      image.decoding = "async";
-      image.src = fullUrl(pictures[(index + delta + count) % count]);
+    for (const dir of [1, -1] as const) {
+      const target = preloadIndex(index, dir, count);
+      if (target !== null) preloadImage(fullUrl(pictures[target]));
     }
   }, [count, index, pictures]);
 
