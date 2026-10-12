@@ -2,12 +2,13 @@
 
 import { cn } from "cn";
 import { SlidersHorizontal } from "lucide-react";
-import { type KeyboardEvent, useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
+  DrawerClose,
   DrawerContent,
   DrawerDescription,
   DrawerFooter,
@@ -27,16 +28,8 @@ import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { DEFAULT_SEARCH, matchesSearch, type Search, type SortOrder } from "@/lib/listings/filter";
 import type { ListingSummary, PriceMode } from "@/lib/listings/types";
-import {
-  isDefaultSearch,
-  PRICE_RANGE,
-  sameDraft,
-  type SearchDraft,
-  SORT_ORDERS,
-  useAppliedSearch,
-} from "@/lib/search-params";
+import { isDefaultSearch, PRICE_RANGE, SORT_ORDERS, useAppliedSearch } from "@/lib/search-params";
 import { useMapUi } from "@/lib/store";
-import { useIsMobile } from "@/lib/use-media-query";
 
 import { StatusText } from "./status-text";
 
@@ -52,10 +45,8 @@ const isMode = (value: string): value is PriceMode => value === "day" || value =
 const isSort = (value: string): value is SortOrder =>
   (SORT_ORDERS as readonly string[]).includes(value);
 
-const toDraft = ({ mode, max, call }: Search): SearchDraft => ({ mode, max, call });
-
 /** `Max ฿800 / day`, `Max ฿15,000 / mo`, `Max ฿3,000+ / day` (no limit). */
-function maxLabel({ mode, max }: SearchDraft): string {
+function maxLabel(mode: PriceMode, max: number): string {
   const value =
     max === Number.POSITIVE_INFINITY
       ? `${intFormat.format(PRICE_RANGE[mode].max)}+`
@@ -72,27 +63,15 @@ type TopBarProps = {
 };
 
 /**
- * Search controls. Mode, max price and call-for-price are a draft applied with Search (or Enter
- * anywhere in the bar); sort applies immediately. The applied search lives in the URL.
+ * Search controls. Every control applies at once: the slider on release (pointer up or a
+ * keyboard step, not while dragging), the mode toggle, the call-for-price switch and sort on
+ * change. The applied search lives in the URL.
  *
  * Under `md` the bar collapses (CSS) to the logo, the mode toggle and a "Filters" button that
- * opens a drawer with the same slider, switch, sort and Search, driven by the same draft. There
- * the mode toggle applies at once (the slider and Search are hidden in the drawer).
+ * opens a drawer with the same slider, switch and sort.
  */
 export function TopBar({ listings, filtered, lastScrapeAt }: TopBarProps) {
   const [applied, setApplied] = useAppliedSearch();
-  const appliedDraft = toDraft(applied);
-  const [draft, setDraft] = useState<SearchDraft>(appliedDraft);
-  // The draft follows the applied search whenever that changes (URL load, Reset, Search).
-  const [draftBase, setDraftBase] = useState<SearchDraft>(appliedDraft);
-  if (!sameDraft(draftBase, appliedDraft)) {
-    setDraftBase(appliedDraft);
-    setDraft(appliedDraft);
-  }
-
-  const isMobile = useIsMobile();
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const dirty = !sameDraft(draft, appliedDraft);
   const callId = useId();
   const drawerCallId = useId();
 
@@ -105,62 +84,20 @@ export function TopBar({ listings, filtered, lastScrapeAt }: TopBarProps) {
     if (!listing || !matchesSearch(listing, next)) select(null, null);
   };
 
-  const applyDraft = () => {
-    if (dirty) apply({ ...applied, ...draft });
-  };
-
   const onModeChange = (value: string) => {
-    if (!isMode(value) || value === draft.mode) return;
-    const max = PRICE_RANGE[value].default;
-    if (isMobile) apply({ ...applied, mode: value, max });
-    else setDraft({ ...draft, mode: value, max });
+    if (!isMode(value) || value === applied.mode) return;
+    apply({ ...applied, mode: value, max: PRICE_RANGE[value].default });
   };
-
-  /** Enter applies the draft (`after` runs once it did, e.g. closing the drawer). */
-  const enterApplies = (after?: () => void) => (event: KeyboardEvent<HTMLElement>) => {
-    if (event.key !== "Enter" || event.defaultPrevented) return;
-    // Ignore events bubbling through portals (the sort menu) and buttons with their own action.
-    const target = event.target as HTMLElement;
-    if (!event.currentTarget.contains(target) || target.closest("[data-native-enter]")) return;
-    event.preventDefault();
-    applyDraft();
-    after?.();
-  };
-
-  const searchButton = (className?: string, after?: () => void) => (
-    <Button
-      size="sm"
-      variant={dirty ? "default" : "outline"}
-      disabled={!dirty}
-      onClick={() => {
-        applyDraft();
-        after?.();
-      }}
-      data-native-enter
-      className={cn("px-4", dirty && "animate-pulse", className)}
-    >
-      Search
-    </Button>
-  );
 
   const resetButton = (className?: string) =>
     isDefaultSearch(applied) ? null : (
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={() => apply(DEFAULT_SEARCH)}
-        data-native-enter
-        className={className}
-      >
+      <Button size="sm" variant="ghost" onClick={() => apply(DEFAULT_SEARCH)} className={className}>
         Reset
       </Button>
     );
 
   return (
-    <header
-      className="flex h-14 shrink-0 items-center gap-2 border-b px-3 md:gap-4 md:px-4"
-      onKeyDown={enterApplies()}
-    >
+    <header className="flex h-14 shrink-0 items-center gap-2 border-b px-3 md:gap-4 md:px-4">
       <Logo className="md:mr-2" />
 
       <ToggleGroup
@@ -168,7 +105,7 @@ export function TopBar({ listings, filtered, lastScrapeAt }: TopBarProps) {
         variant="outline"
         size="sm"
         spacing={0}
-        value={draft.mode}
+        value={applied.mode}
         onValueChange={onModeChange}
         aria-label="Price mode"
       >
@@ -180,11 +117,9 @@ export function TopBar({ listings, filtered, lastScrapeAt }: TopBarProps) {
         </ToggleGroupItem>
       </ToggleGroup>
 
-      <MaxSlider draft={draft} setDraft={setDraft} className="w-44 max-md:hidden" />
+      <MaxSlider applied={applied} apply={apply} className="w-44 max-md:hidden" />
 
-      <CallSwitch id={callId} draft={draft} setDraft={setDraft} className="max-md:hidden" />
-
-      {searchButton("max-md:hidden")}
+      <CallSwitch id={callId} applied={applied} apply={apply} className="max-md:hidden" />
 
       {resetButton("max-md:hidden")}
 
@@ -197,14 +132,7 @@ export function TopBar({ listings, filtered, lastScrapeAt }: TopBarProps) {
         className="ml-auto max-md:hidden"
       />
 
-      <Drawer
-        open={filtersOpen}
-        onOpenChange={(open) => {
-          setFiltersOpen(open);
-          // Closing without Search drops the unsaved draft.
-          if (!open) setDraft(appliedDraft);
-        }}
-      >
+      <Drawer>
         <DrawerTrigger asChild>
           <Button size="sm" variant="outline" className="relative ml-auto md:hidden">
             <SlidersHorizontal aria-hidden />
@@ -217,16 +145,17 @@ export function TopBar({ listings, filtered, lastScrapeAt }: TopBarProps) {
             )}
           </Button>
         </DrawerTrigger>
-        <DrawerContent onKeyDown={enterApplies(() => setFiltersOpen(false))}>
+        <DrawerContent>
           <DrawerHeader className="pb-2">
             <DrawerTitle>Filters</DrawerTitle>
             <DrawerDescription>
-              {draft.mode === "month" ? "Monthly" : "Daily"} prices. Switch the mode in the top bar.
+              {applied.mode === "month" ? "Monthly" : "Daily"} prices. Switch the mode in the top
+              bar.
             </DrawerDescription>
           </DrawerHeader>
           <div className="flex flex-col gap-5 px-4 py-2">
-            <MaxSlider draft={draft} setDraft={setDraft} />
-            <CallSwitch id={drawerCallId} draft={draft} setDraft={setDraft} />
+            <MaxSlider applied={applied} apply={apply} />
+            <CallSwitch id={drawerCallId} applied={applied} apply={apply} />
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm">Sort</span>
               <SortSelect applied={applied} setApplied={setApplied} />
@@ -234,7 +163,11 @@ export function TopBar({ listings, filtered, lastScrapeAt }: TopBarProps) {
           </div>
           <DrawerFooter className="flex-row">
             {resetButton("h-9 flex-1")}
-            {searchButton("h-9 flex-1", () => setFiltersOpen(false))}
+            <DrawerClose asChild>
+              <Button size="sm" variant="outline" className="h-9 flex-1">
+                Done
+              </Button>
+            </DrawerClose>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
@@ -242,41 +175,70 @@ export function TopBar({ listings, filtered, lastScrapeAt }: TopBarProps) {
   );
 }
 
-type DraftProps = {
-  draft: SearchDraft;
-  setDraft: (draft: SearchDraft) => void;
+type ControlProps = {
+  applied: Search;
+  apply: (search: Search) => void;
   className?: string;
 };
 
-/** `Max ฿800 / day` label and the slider for the draft's mode. */
-function MaxSlider({ draft, setDraft, className }: DraftProps) {
-  const range = PRICE_RANGE[draft.mode];
+/**
+ * `Max ฿800 / day` label and the slider for the applied mode. While dragging only the label and
+ * thumb follow (`live`); the search is applied once, on release. `live` remembers the search it
+ * was made against, so it's dropped as soon as a search applies.
+ *
+ * A pointer drag is committed from `lostPointerCapture` with the last value seen in
+ * `onValueChange`, not from Radix's `onValueCommit`: that one compares against a render-time
+ * copy of the value, which lags behind a fast release (pointermove updates aren't rendered
+ * synchronously) and never fires inside the vaul drawer. `onValueCommit` still handles the
+ * keyboard (it passes the new value directly).
+ */
+function MaxSlider({ applied, apply, className }: ControlProps) {
+  const { mode } = applied;
+  const range = PRICE_RANGE[mode];
+  const [live, setLive] = useState<{ value: number; base: Search } | null>(null);
+  const pointer = useRef<{ latest: number | null } | null>(null);
+  const toMax = (value: number) => (value >= range.max ? Number.POSITIVE_INFINITY : value);
+  const commit = (value: number) => apply({ ...applied, max: toMax(value) });
+  const max = live?.base === applied ? toMax(live.value) : applied.max;
   return (
     <div className={cn("flex shrink-0 flex-col gap-1.5", className)}>
-      <span className="text-xs font-medium tabular-nums">{maxLabel(draft)}</span>
+      <span className="text-xs font-medium tabular-nums">{maxLabel(mode, max)}</span>
       <Slider
         min={range.min}
         max={range.max}
         step={range.step}
-        value={[draft.max === Number.POSITIVE_INFINITY ? range.max : draft.max]}
+        value={[max === Number.POSITIVE_INFINITY ? range.max : max]}
+        onPointerDown={() => {
+          pointer.current = { latest: null };
+        }}
+        onLostPointerCapture={() => {
+          const latest = pointer.current?.latest ?? null;
+          pointer.current = null;
+          if (latest !== null) commit(latest);
+        }}
         onValueChange={([value]) => {
           if (value === undefined) return;
-          setDraft({ ...draft, max: value >= range.max ? Number.POSITIVE_INFINITY : value });
+          if (pointer.current) pointer.current.latest = value;
+          setLive({ value, base: applied });
+        }}
+        onValueCommit={([value]) => {
+          if (value !== undefined && !pointer.current) commit(value);
         }}
         aria-label="Maximum price"
+        data-vaul-no-drag
       />
     </div>
   );
 }
 
-function CallSwitch({ id, draft, setDraft, className }: DraftProps & { id: string }) {
+function CallSwitch({ id, applied, apply, className }: ControlProps & { id: string }) {
   return (
     <div className={cn("flex shrink-0 items-center gap-2", className)}>
       <Switch
         id={id}
         size="sm"
-        checked={draft.call}
-        onCheckedChange={(call) => setDraft({ ...draft, call })}
+        checked={applied.call}
+        onCheckedChange={(call) => apply({ ...applied, call })}
       />
       <label htmlFor={id} className="text-sm whitespace-nowrap">
         Include call-for-price
@@ -285,7 +247,7 @@ function CallSwitch({ id, draft, setDraft, className }: DraftProps & { id: strin
   );
 }
 
-/** Sort applies immediately (no draft). */
+/** Sort applies immediately. */
 function SortSelect({
   applied,
   setApplied,

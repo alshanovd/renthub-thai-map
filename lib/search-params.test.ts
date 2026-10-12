@@ -6,7 +6,6 @@ import {
   clampMax,
   isDefaultSearch,
   normalizeSearch,
-  sameDraft,
   sameSearch,
   searchFromUrl,
   searchParsers,
@@ -22,27 +21,27 @@ const roundTrip = (search: Search) =>
   searchFromUrl(loadSearch(serializeSearch(searchToUrl(search))));
 const parse = (query: string) => searchFromUrl(loadSearch(query));
 
-describe("draft equality", () => {
-  it("compares mode, max and call", () => {
-    expect(sameDraft({ mode: "day", max: 800, call: false }, DEFAULT_SEARCH)).toBe(true);
-    expect(sameDraft({ mode: "day", max: 850, call: false }, DEFAULT_SEARCH)).toBe(false);
-    expect(sameDraft({ mode: "day", max: 800, call: true }, DEFAULT_SEARCH)).toBe(false);
-    expect(sameDraft({ mode: "month", max: 800, call: false }, DEFAULT_SEARCH)).toBe(false);
+describe("search equality", () => {
+  it("compares mode, max, call and sort", () => {
+    expect(sameSearch({ ...DEFAULT_SEARCH, max: 800 }, DEFAULT_SEARCH)).toBe(true);
+    expect(sameSearch({ ...DEFAULT_SEARCH, max: 850 }, DEFAULT_SEARCH)).toBe(false);
+    expect(sameSearch({ ...DEFAULT_SEARCH, call: true }, DEFAULT_SEARCH)).toBe(false);
+    expect(sameSearch({ ...DEFAULT_SEARCH, mode: "month" }, DEFAULT_SEARCH)).toBe(false);
+    expect(sameSearch({ ...DEFAULT_SEARCH, sort: "updated" }, DEFAULT_SEARCH)).toBe(false);
   });
 
   it("treats Infinity and the top of the range as the same (no limit)", () => {
-    const inf = { mode: "day", max: INF, call: false } as const;
-    expect(sameDraft(inf, { ...inf })).toBe(true);
-    expect(sameDraft(inf, { ...inf, max: 3000 })).toBe(true);
-    expect(sameDraft(inf, { ...inf, max: 2950 })).toBe(false);
-    expect(sameDraft({ ...inf, mode: "month" }, { ...inf, mode: "month", max: 60_000 })).toBe(true);
+    const inf: Search = { ...DEFAULT_SEARCH, max: INF };
+    expect(sameSearch(inf, { ...inf })).toBe(true);
+    expect(sameSearch(inf, { ...inf, max: 3000 })).toBe(true);
+    expect(sameSearch(inf, { ...inf, max: 2950 })).toBe(false);
+    expect(sameSearch({ ...inf, mode: "month" }, { ...inf, mode: "month", max: 60_000 })).toBe(
+      true,
+    );
   });
 
-  it("ignores sort for drafts but not for searches", () => {
-    const sorted: Search = { ...DEFAULT_SEARCH, sort: "updated" };
-    expect(sameDraft(sorted, DEFAULT_SEARCH)).toBe(true);
-    expect(sameSearch(sorted, DEFAULT_SEARCH)).toBe(false);
-    expect(isDefaultSearch(sorted)).toBe(false);
+  it("isDefaultSearch checks every field", () => {
+    expect(isDefaultSearch({ ...DEFAULT_SEARCH, sort: "updated" })).toBe(false);
     expect(isDefaultSearch({ ...DEFAULT_SEARCH })).toBe(true);
   });
 });

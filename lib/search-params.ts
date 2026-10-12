@@ -95,18 +95,14 @@ export function normalizeSearch(search: Search): Search {
   return { ...search, max: clampMax(search.max, search.mode) };
 }
 
-/** The part of a search that is edited as a draft and applied with Search. */
-export type SearchDraft = Pick<Search, "mode" | "max" | "call">;
-
-/** True when two drafts select the same listings (`Infinity === Infinity` holds). */
-export function sameDraft(a: SearchDraft, b: SearchDraft): boolean {
-  return (
-    a.mode === b.mode && a.call === b.call && clampMax(a.max, a.mode) === clampMax(b.max, b.mode)
-  );
-}
-
+/** True when two searches select and order the same listings (`Infinity === Infinity` holds). */
 export function sameSearch(a: Search, b: Search): boolean {
-  return sameDraft(a, b) && a.sort === b.sort;
+  return (
+    a.mode === b.mode &&
+    a.call === b.call &&
+    a.sort === b.sort &&
+    clampMax(a.max, a.mode) === clampMax(b.max, b.mode)
+  );
 }
 
 export function isDefaultSearch(search: Search): boolean {
