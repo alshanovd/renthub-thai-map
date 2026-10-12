@@ -5,19 +5,26 @@ import {
   ControlPosition,
   Map as GoogleMap,
   type MapEvent,
+  RenderingType,
 } from "@vis.gl/react-google-maps";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import type { Pin, PriceMode } from "@/lib/listings/types";
 import { useMapUi } from "@/lib/store";
 
-import { ClusteredPins } from "./clusterer";
 import { FavoritesFit } from "./favorites-fit";
+import { PinLayer } from "./pin-layer";
 import { PinPreview } from "./pin-preview";
 import { SelectionPan } from "./selection-pan";
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAP_ID || "DEMO_MAP_ID";
+/**
+ * Map tiles: raster unless `NEXT_PUBLIC_MAP_RENDERING=vector`. Measured in plan 16: vector costs
+ * ~85 MB more browser RSS and ~11 MB more JS heap for the same scenario.
+ */
+const RENDERING =
+  process.env.NEXT_PUBLIC_MAP_RENDERING === "vector" ? RenderingType.VECTOR : RenderingType.RASTER;
 
 /** Chiang Mai Old City. */
 const DEFAULT_CENTER = { lat: 18.7883, lng: 98.9853 };
@@ -50,7 +57,6 @@ export function ListingsMap({
   compact = false,
 }: ListingsMapProps) {
   const setBounds = useMapUi((s) => s.setBounds);
-  const selectedId = useMapUi((s) => s.selectedId);
   const select = useMapUi((s) => s.select);
   const boundsTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -85,6 +91,7 @@ export function ListingsMap({
       <GoogleMap
         className="size-full"
         mapId={MAP_ID}
+        renderingType={RENDERING}
         defaultCenter={DEFAULT_CENTER}
         defaultZoom={DEFAULT_ZOOM}
         gestureHandling="greedy"
@@ -95,7 +102,7 @@ export function ListingsMap({
         onIdle={onIdle}
         onClick={onMapClick}
       >
-        <ClusteredPins pins={pins} mode={mode} favoriteIds={favoriteIds} selectedId={selectedId} />
+        <PinLayer pins={pins} mode={mode} favoriteIds={favoriteIds} />
         <PinPreview pinsById={pinsById} mode={mode} />
         <SelectionPan pinsById={pinsById} />
         <FavoritesFit pins={pins} ready={fitReady} />

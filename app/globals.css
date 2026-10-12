@@ -131,3 +131,49 @@
     @apply font-sans;
   }
 }
+
+/*
+ * Map price pins (`components/map/pin-element.ts`): plain DOM inside AdvancedMarkerElements.
+ * States are data attributes set by the pin layer; later rules win (hover < card hover <
+ * selected < muted).
+ */
+@layer components {
+  .pin {
+    @apply relative flex cursor-pointer flex-col items-center pb-1.5;
+  }
+  .pin-pill {
+    @apply relative rounded-full border border-white/70 bg-neutral-900 px-2 py-0.5 text-xs font-semibold whitespace-nowrap text-white shadow-md transition-[transform,background-color,color,box-shadow] duration-100;
+  }
+  .pin-tail {
+    @apply absolute bottom-0.5 size-2 rotate-45 border-r border-b border-white/70 bg-neutral-900;
+  }
+  .pin-heart {
+    @apply absolute -top-2 -right-2 flex size-4 items-center justify-center rounded-full bg-white text-[10px] leading-none text-rose-600 shadow ring-1 ring-rose-200;
+  }
+  @media (hover: hover) {
+    .pin:hover .pin-pill {
+      @apply scale-105 bg-neutral-700 shadow-lg;
+    }
+    .pin:hover .pin-tail {
+      @apply bg-neutral-700;
+    }
+  }
+  .pin[data-hovered] .pin-pill {
+    @apply bg-neutral-700 ring-2 ring-brand;
+  }
+  .pin[data-hovered] .pin-tail {
+    @apply bg-neutral-700;
+  }
+  .pin[data-selected] .pin-pill {
+    @apply scale-115 border-white bg-brand px-2.5 py-1 text-sm;
+  }
+  .pin[data-selected] .pin-tail {
+    @apply border-white bg-brand;
+  }
+  .pin[data-muted] .pin-pill {
+    @apply border-white/60 bg-neutral-500 text-neutral-100 line-through opacity-75;
+  }
+  .pin[data-muted] .pin-tail {
+    @apply bg-neutral-500 opacity-75;
+  }
+}
