@@ -1,0 +1,514 @@
+{
+  "pageProps": {
+    "listing": {
+      "__typename": "ListingConsumerType",
+      "id": "63185",
+      "parentId": null,
+      "userId": 233074,
+      "totalView": 69085,
+      "name": "Smith Residence (Chiang Mai)",
+      "title": "",
+      "coverPicture": "/listing_picture/202207/20220711/kKxbPechW1W9T1GeQuWy.jpg",
+      "isCurrentUserListingOwner": false,
+      "allowComment": true,
+      "propertyType": "APARTMENT",
+      "slug": "smith-residence-chiang-mai",
+      "description": "<h2>Smith Residence&nbsp;is the best choice for Chiang mai apartment accommodation either short or long stay in Chiang Mai with Wi-Fi internet and a rooftop swimming pool. Chiangmai Smith Residence is an apartment located right in Chiangmai City near Saturday Walking Street on Wualai road.</h2>",
+      "announcement": "",
+      "sponsorPackage": "PREMIUM",
+      "displayStatus": "ONLINE",
+      "reviewStatus": "UNVERIFIED",
+      "road": "",
+      "houseNumber": "",
+      "street": "",
+      "province": "Chiang Mai",
+      "district": "Muang Chiang Mai",
+      "subdistrict": "Hai Ya",
+      "provinceCode": 50,
+      "slugPerLocale": {
+        "en": "smith-residence-chiang-mai",
+        "th": "สมิทธ์-เรสซิเด้นซ์-เชียงใหม่"
+      },
+      "linkYoutube": null,
+      "location": {
+        "__typename": "LocationCoordinatesType",
+        "lat": 18.77909740995302,
+        "lng": 98.98803089228545
+      },
+      "price": {
+        "__typename": "SearchListingPriceType",
+        "monthly": {
+          "__typename": "MonthlyPriceType",
+          "minPrice": 9500,
+          "maxPrice": 21000,
+          "type": "AMOUNT"
+        },
+        "daily": {
+          "__typename": "DailyPriceType",
+          "minPrice": 750,
+          "maxPrice": 950,
+          "type": "AMOUNT"
+        },
+        "shortTerm": {
+          "__typename": "ShortTermPriceType",
+          "shortContract": true,
+          "minPrice": 9500,
+          "maxPrice": 20000,
+          "oneMonth": {
+            "__typename": "ShortTermPriceByType",
+            "shortContract": true,
+            "minPrice": 9500,
+            "maxPrice": 20000
+          },
+          "threeMonth": {
+            "__typename": "ShortTermPriceByType",
+            "shortContract": true,
+            "minPrice": 9500,
+            "maxPrice": 20000
+          },
+          "sixMonth": {
+            "__typename": "ShortTermPriceByType",
+            "shortContract": true,
+            "minPrice": 9500,
+            "maxPrice": 20000
+          }
+        }
+      },
+      "fee": {
+        "__typename": "FeeType",
+        "water": {
+          "__typename": "WaterType",
+          "type": "AMOUNT",
+          "unitPrice": 30,
+          "minimumAmount": 250,
+          "perPersonPrice": null,
+          "perPersonUsageLimit": null,
+          "unitPriceWhenExceedPersonLimit": null,
+          "perMonthPrice": null,
+          "perMonthUsageLimit": null,
+          "unitPriceWhenExceedPerMonthLimit": null
+        },
+        "electric": {
+          "__typename": "ElectricType",
+          "type": "AMOUNT",
+          "unitPrice": 8,
+          "minimumAmount": null
+        },
+        "service": {
+          "__typename": "ServiceType",
+          "type": "INCLUDED",
+          "price": null,
+          "range": null
+        },
+        "internet": {
+          "__typename": "InternetType",
+          "type": "INCLUDED",
+          "price": null,
+          "range": null
+        },
+        "phone": {
+          "__typename": "PhoneType",
+          "type": "NO_PHONE",
+          "pricePerMinute": null,
+          "callDurationLimit": null,
+          "pricePerCall": null
+        },
+        "advancePayment": {
+          "__typename": "AdvancePaymentType",
+          "type": "MONTH",
+          "amount": null,
+          "month": 1,
+          "range": null
+        },
+        "deposit": {
+          "__typename": "DepositType",
+          "type": "MONTH",
+          "amount": null,
+          "month": 1,
+          "range": null
+        }
+      },
+      "rooms": [
+        {
+          "__typename": "RoomSearchType",
+          "roomName": "STUDIO",
+          "roomType": "STUDIO",
+          "maxSize": 32,
+          "minSize": 32,
+          "price": {
+            "__typename": "PriceType",
+            "daily": {
+              "__typename": "DailyPriceType",
+              "type": "AMOUNT",
+              "minPrice": 750,
+              "maxPrice": 950
+            },
+            "monthly": {
+              "__typename": "MonthlyPriceType",
+              "type": "AMOUNT",
+              "minPrice": 9500,
+              "maxPrice": 9500
+            },
+            "shortTerm": {
+              "__typename": "ShortTermType",
+              "oneMonth": 9500,
+              "threeMonth": 9500,
+              "sixMonth": 9500
+            }
+          },
+          "availability": false,
+          "shortContract": true
+        },
+        {
+          "__typename": "RoomSearchType",
+          "roomName": "STUDIO",
+          "roomType": "STUDIO",
+          "maxSize": 32,
+          "minSize": 32,
+          "price": {
+            "__typename": "PriceType",
+            "daily": {
+              "__typename": "DailyPriceType",
+              "type": "CALL",
+              "minPrice": 850,
+              "maxPrice": 850
+            },
+            "monthly": {
+              "__typename": "MonthlyPriceType",
+              "type": "AMOUNT",
+              "minPrice": 10500,
+              "maxPrice": 10500
+            },
+            "shortTerm": {
+              "__typename": "ShortTermType",
+              "oneMonth": 10500,
+              "threeMonth": 10500,
+              "sixMonth": 10500
+            }
+          },
+          "availability": false,
+          "shortContract": true
+        }
+      ],
+      "amenities": {
+        "__typename": "AmenitiesType",
+        "hasPhone": false,
+        "hasAir": true,
+        "hasFan": false,
+        "hasTV": true,
+        "hasRefrigerator": true,
+        "hasFurniture": true,
+        "hasWaterHeater": true,
+        "hasInternet": true,
+        "allowPet": false,
+        "allowSmoking": false,
+        "hasKeyCardAccess": true,
+        "hasFingerPrintAccess": false,
+        "hasSecurity": true,
+        "hasCCTV": true,
+        "hasBicycleParking": true,
+        "hasParking": true,
+        "hasPool": true,
+        "hasFitness": true,
+        "hasLaundry": true,
+        "hasSalon": false,
+        "hasLift": true,
+        "hasShop": false,
+        "hasRestaurant": true,
+        "hasCableTV": true,
+        "hasEvCharger": false,
+        "hasSofa": false,
+        "hasDesk": false,
+        "hasKitchenStove": false
+      },
+      "promotion": {
+        "__typename": "PromotionType",
+        "type": "NO_PROMOTION",
+        "start": null,
+        "end": null,
+        "detail": ""
+      },
+      "pictures": [
+        {
+          "__typename": "PictureType",
+          "pictureUrl": "/listing_picture/202207/20220711/kKxbPechW1W9T1GeQuWy.jpg",
+          "caption": null,
+          "position": 1,
+          "watermark": false
+        },
+        {
+          "__typename": "PictureType",
+          "pictureUrl": "/listing_picture/202207/20220711/8rarFdKtCYcX57K2x3r6.jpg",
+          "caption": null,
+          "position": 2,
+          "watermark": false
+        },
+        {
+          "__typename": "PictureType",
+          "pictureUrl": "/listing_picture/202207/20220711/PiyVVidtdtZQQppBmjSk.jpg",
+          "caption": null,
+          "position": 3,
+          "watermark": false
+        }
+      ],
+      "virtualTour": {
+        "__typename": "VirtualTourType",
+        "listingId": "63185",
+        "virtualTourUrl": "/listing_virtual_tour/202207/20220714/63185data/63185.swf",
+        "newVersion": true,
+        "version": "v2"
+      },
+      "refreshedAt": "2026-08-13T02:59:49.793Z",
+      "createdAt": "2022-05-17T05:54:32.179Z",
+      "updatedAt": "2026-08-13T02:59:49.800Z",
+      "addressPhoto": {
+        "__typename": "VerificationDocumentType",
+        "id": "43697",
+        "documentType": "ADDRESS_PHOTO",
+        "reviewStatus": "VERIFIED"
+      },
+      "addressDocument": {
+        "__typename": "VerificationDocumentType",
+        "id": "43696",
+        "documentType": "ADDRESS_DOCUMENT",
+        "reviewStatus": "VERIFIED"
+      },
+      "structureInspectionDocument": null,
+      "showStructureInspectionDocument": null,
+      "noneHotelAccommodationDocument": null,
+      "allowReview": true,
+      "review": {
+        "__typename": "ReviewSummaryType",
+        "totalCount": 0,
+        "score": 0,
+        "scoreInformation": {
+          "__typename": "ScoreInformationType",
+          "cleanliness": 0,
+          "location": 0,
+          "service": 0,
+          "valueForMoney": 0,
+          "convenientOfTravel": 0
+        },
+        "getReviews": {
+          "__typename": "SearchReviewsPayload",
+          "status": "SUCCESS",
+          "result": [],
+          "error": null
+        }
+      },
+      "nearbyZones": [
+        {
+          "__typename": "ZoneSearchResultType",
+          "id": "4277",
+          "name": "Robinson Chiangmai",
+          "zoneType": "SHOPPING",
+          "zoneInformation": {
+            "provinceCode": 50
+          },
+          "zoneSubType": "SHOPPING_MALL",
+          "slug": "robinson-chiangmai",
+          "distance": 1681,
+          "popularity": 2,
+          "listingCount": {
+            "__typename": "ListingCountType",
+            "daily": 78,
+            "monthly": 126
+          }
+        },
+        {
+          "__typename": "ZoneSearchResultType",
+          "id": "3013",
+          "name": "Central Plaza Chiang Mai Airport",
+          "zoneType": "SHOPPING",
+          "zoneInformation": {
+            "provinceCode": 50
+          },
+          "zoneSubType": "SHOPPING_MALL",
+          "slug": "central-plaza-chiang-mai-airport",
+          "distance": 1714,
+          "popularity": 2,
+          "listingCount": {
+            "__typename": "ListingCountType",
+            "daily": 189,
+            "monthly": 343
+          }
+        },
+        {
+          "__typename": "ZoneSearchResultType",
+          "id": "4273",
+          "name": "Central Kad Suan Kaew",
+          "zoneType": "SHOPPING",
+          "zoneInformation": {
+            "provinceCode": 50
+          },
+          "zoneSubType": "SHOPPING_MALL",
+          "slug": "central-kad-suan-kaew",
+          "distance": 2305,
+          "popularity": 2,
+          "listingCount": {
+            "__typename": "ListingCountType",
+            "daily": 147,
+            "monthly": 286
+          }
+        },
+        {
+          "__typename": "ZoneSearchResultType",
+          "id": "5500",
+          "name": "Chiang Mai Medical Center",
+          "zoneType": "HOSPITAL",
+          "zoneInformation": {
+            "provinceCode": 50
+          },
+          "zoneSubType": null,
+          "slug": "chiang-mai-medical-center",
+          "distance": 154,
+          "popularity": 1,
+          "listingCount": {
+            "__typename": "ListingCountType",
+            "daily": 294,
+            "monthly": 580
+          }
+        },
+        {
+          "__typename": "ZoneSearchResultType",
+          "id": "4299",
+          "name": "Pratu Chiang Mai Market",
+          "zoneType": "SHOPPING",
+          "zoneInformation": {
+            "provinceCode": 50
+          },
+          "zoneSubType": "MARKET",
+          "slug": "pratu-chiang-mai-market",
+          "distance": 278,
+          "popularity": 1,
+          "listingCount": {
+            "__typename": "ListingCountType",
+            "daily": 118,
+            "monthly": 180
+          }
+        },
+        {
+          "__typename": "ZoneSearchResultType",
+          "id": "4278",
+          "name": "Chiang Mai College Of Dramatic Arts",
+          "zoneType": "SCHOOL",
+          "zoneInformation": {
+            "provinceCode": 50
+          },
+          "zoneSubType": "UNIVERSITY_COLLEGE",
+          "slug": "chiang-mai-college-of-dramatic-arts",
+          "distance": 505,
+          "popularity": 1,
+          "listingCount": {
+            "__typename": "ListingCountType",
+            "daily": 107,
+            "monthly": 162
+          }
+        },
+        {
+          "__typename": "ZoneSearchResultType",
+          "id": "6722",
+          "name": "Kom Market Chiangmai",
+          "zoneType": "SHOPPING",
+          "zoneInformation": {
+            "provinceCode": 50
+          },
+          "zoneSubType": "MARKET",
+          "slug": "kom-market-chiangmai",
+          "distance": 510,
+          "popularity": 1,
+          "listingCount": {
+            "__typename": "ListingCountType",
+            "daily": 289,
+            "monthly": 561
+          }
+        },
+        {
+          "__typename": "ZoneSearchResultType",
+          "id": "7384",
+          "name": "Chiang Mai Pillar City Shrine",
+          "zoneType": "AREA",
+          "zoneInformation": {
+            "provinceCode": 50
+          },
+          "zoneSubType": null,
+          "slug": "chiang-mai-pillar-city-shrine",
+          "distance": 856,
+          "popularity": 1,
+          "listingCount": {
+            "__typename": "ListingCountType",
+            "daily": 296,
+            "monthly": 587
+          }
+        }
+      ]
+    },
+    "nearbyListings": [
+      {
+        "__typename": "ListingSearchResultConsumerType",
+        "id": "25035",
+        "name": "Devavill",
+        "coverPicture": "/listing_picture/201912/20191206/UujDqZtmmU91epCKkt2t.jpg",
+        "userId": "57893",
+        "slug": "devavill",
+        "province": "Chiang Mai",
+        "district": "Muang Chiang Mai",
+        "sponsorPackage": "PREMIUM",
+        "distance": 785,
+        "hasVirtualTour": true,
+        "refreshedAt": "2026-09-23T02:27:59.026Z",
+        "createdAt": "2016-05-27T04:36:38.008Z",
+        "price": {
+          "__typename": "SearchListingPriceType",
+          "monthly": {
+            "__typename": "MonthlyPriceType",
+            "minPrice": 4500,
+            "maxPrice": 6000,
+            "type": "AMOUNT"
+          },
+          "daily": {
+            "__typename": "DailyPriceType",
+            "minPrice": 0,
+            "maxPrice": 0,
+            "type": "NO_DAILY_RENTAL"
+          }
+        }
+      },
+      {
+        "__typename": "ListingSearchResultConsumerType",
+        "id": "6280",
+        "name": "imm-mi-emm  house",
+        "coverPicture": "/listing_picture/202306/20230602/ZrgpKYTNtftB4a57f6yg.jpg",
+        "userId": "2693",
+        "slug": "imm-mi-emm-house",
+        "province": "Chiang Mai",
+        "district": "Muang Chiang Mai",
+        "sponsorPackage": "FREE",
+        "distance": 29,
+        "hasVirtualTour": false,
+        "refreshedAt": "2026-07-12T02:13:11.038Z",
+        "createdAt": "2012-10-09T01:01:04.441Z",
+        "price": {
+          "__typename": "SearchListingPriceType",
+          "monthly": {
+            "__typename": "MonthlyPriceType",
+            "minPrice": 3000,
+            "maxPrice": 3500,
+            "type": "AMOUNT"
+          },
+          "daily": {
+            "__typename": "DailyPriceType",
+            "minPrice": 350,
+            "maxPrice": 350,
+            "type": "AMOUNT"
+          }
+        }
+      }
+    ],
+    "locale": "en",
+    "device": "desktop",
+    "__lang": "en",
+    "__namespaces": {}
+  },
+  "__N_SSP": true
+}

@@ -1,0 +1,691 @@
+{
+  "pageProps": {
+    "zone": {
+      "__typename": "ZoneType",
+      "id": "484",
+      "name": "Chiang Mai",
+      "slug": "chiang-mai",
+      "slugPerLocale": {
+        "en": "chiang-mai",
+        "th": "เชียงใหม่"
+      },
+      "description": "",
+      "zoneInformation": {
+        "provinceCode": 50
+      },
+      "zoneType": "PROVINCE",
+      "zoneSubType": "NORTHERN_PROVINCE",
+      "displayStatus": "ONLINE",
+      "popularity": 2.5,
+      "alternativeNames": [],
+      "distance": null,
+      "location": null,
+      "listingCount": {
+        "__typename": "ListingCountType",
+        "monthly": 892,
+        "daily": 432
+      },
+      "nearbyZones": {
+        "ROAD": [
+          {
+            "__typename": "ZoneSearchResultType",
+            "id": "4226",
+            "name": "Nimmanahaeminda Road",
+            "zoneType": "ROAD",
+            "zoneSubType": "ROAD_LEVEL_1",
+            "listingCount": {
+              "__typename": "ListingCountType",
+              "monthly": 246,
+              "daily": 125
+            },
+            "zoneInformation": {
+              "provinceCode": 10
+            },
+            "slug": "nimmanahaeminda-road"
+          },
+          {
+            "__typename": "ZoneSearchResultType",
+            "id": "6193",
+            "name": "Huaykaew Road",
+            "zoneType": "ROAD",
+            "zoneSubType": "ROAD_LEVEL_1",
+            "listingCount": {
+              "__typename": "ListingCountType",
+              "monthly": 59,
+              "daily": 29
+            },
+            "zoneInformation": {
+              "provinceCode": 10
+            },
+            "slug": "huaykaew-road"
+          }
+        ],
+        "DISTRICT": [
+          {
+            "__typename": "ZoneSearchResultType",
+            "id": "9073",
+            "name": "Muang Chiang Mai",
+            "zoneType": "DISTRICT",
+            "zoneSubType": "UPCOUNTRY_DISTRICT",
+            "listingCount": {
+              "__typename": "ListingCountType",
+              "monthly": 641,
+              "daily": 317
+            },
+            "zoneInformation": {
+              "districtCode": 5001,
+              "provinceCode": 50
+            },
+            "slug": "muang-chiang-mai"
+          },
+          {
+            "__typename": "ZoneSearchResultType",
+            "id": "9074",
+            "name": "Chom Thong",
+            "zoneType": "DISTRICT",
+            "zoneSubType": "UPCOUNTRY_DISTRICT",
+            "listingCount": {
+              "__typename": "ListingCountType",
+              "monthly": 2,
+              "daily": 2
+            },
+            "zoneInformation": {
+              "districtCode": 5002,
+              "provinceCode": 50
+            },
+            "slug": "chom-thong-5002"
+          }
+        ],
+        "SHOPPING": [
+          {
+            "__typename": "ZoneSearchResultType",
+            "id": "4273",
+            "name": "Central Kad Suan Kaew",
+            "zoneType": "SHOPPING",
+            "zoneSubType": "SHOPPING_MALL",
+            "listingCount": {
+              "__typename": "ListingCountType",
+              "monthly": 286,
+              "daily": 147
+            },
+            "zoneInformation": {
+              "provinceCode": 50
+            },
+            "slug": "central-kad-suan-kaew"
+          },
+          {
+            "__typename": "ZoneSearchResultType",
+            "id": "4277",
+            "name": "Robinson Chiangmai",
+            "zoneType": "SHOPPING",
+            "zoneSubType": "SHOPPING_MALL",
+            "listingCount": {
+              "__typename": "ListingCountType",
+              "monthly": 126,
+              "daily": 78
+            },
+            "zoneInformation": {
+              "provinceCode": 50
+            },
+            "slug": "robinson-chiangmai"
+          }
+        ],
+        "HOSPITAL": [
+          {
+            "__typename": "ZoneSearchResultType",
+            "id": "4240",
+            "name": "Wing 41 Hospital",
+            "zoneType": "HOSPITAL",
+            "zoneSubType": null,
+            "listingCount": {
+              "__typename": "ListingCountType",
+              "monthly": 188,
+              "daily": 111
+            },
+            "zoneInformation": {
+              "provinceCode": 50
+            },
+            "slug": "wing-41-hospital"
+          },
+          {
+            "__typename": "ZoneSearchResultType",
+            "id": "4241",
+            "name": "Kawila Hospital",
+            "zoneType": "HOSPITAL",
+            "zoneSubType": null,
+            "listingCount": {
+              "__typename": "ListingCountType",
+              "monthly": 121,
+              "daily": 74
+            },
+            "zoneInformation": {
+              "provinceCode": 50
+            },
+            "slug": "kawila-hospital"
+          }
+        ],
+        "AIRPORT": [
+          {
+            "__typename": "ZoneSearchResultType",
+            "id": "4261",
+            "name": "Chiang Mai Airport",
+            "zoneType": "AIRPORT",
+            "zoneSubType": null,
+            "listingCount": {
+              "__typename": "ListingCountType",
+              "monthly": 613,
+              "daily": 305
+            },
+            "zoneInformation": {
+              "provinceCode": 50
+            },
+            "slug": "chiang-mai-airport"
+          }
+        ],
+        "AREA": [
+          {
+            "__typename": "ZoneSearchResultType",
+            "id": "4264",
+            "name": "Chiang Mai Zoo",
+            "zoneType": "AREA",
+            "zoneSubType": null,
+            "listingCount": {
+              "__typename": "ListingCountType",
+              "monthly": 102,
+              "daily": 38
+            },
+            "zoneInformation": {
+              "provinceCode": 50
+            },
+            "slug": "chiang-mai-zoo"
+          }
+        ],
+        "SCHOOL": [
+          {
+            "__typename": "ZoneSearchResultType",
+            "id": "4157",
+            "name": "Chiang Mai University",
+            "zoneType": "SCHOOL",
+            "zoneSubType": "UNIVERSITY_COLLEGE",
+            "listingCount": {
+              "__typename": "ListingCountType",
+              "monthly": 264,
+              "daily": 128
+            },
+            "zoneInformation": {
+              "provinceCode": 50
+            },
+            "slug": "chiang-mai-university"
+          },
+          {
+            "__typename": "ZoneSearchResultType",
+            "id": "4158",
+            "name": "Maejo University",
+            "zoneType": "SCHOOL",
+            "zoneSubType": "UNIVERSITY_COLLEGE",
+            "listingCount": {
+              "__typename": "ListingCountType",
+              "monthly": 100,
+              "daily": 33
+            },
+            "zoneInformation": {
+              "provinceCode": 50
+            },
+            "slug": "maejo-university"
+          }
+        ]
+      },
+      "createdAt": "2022-07-16T15:40:55.179Z",
+      "updatedAt": "2022-07-16T10:35:38.463Z",
+      "hasDistance": false
+    },
+    "locale": "en",
+    "page": "1",
+    "listings": [
+      {
+        "__typename": "ListingSearchResultConsumerType",
+        "id": "71239",
+        "coverPicture": "/listing_picture/202606/20260601/U4KuL3GwEQqrKRLrmUDH.jpg",
+        "slug": "meya-living-santisuk",
+        "name": "MEYA LIVING @SANTISUK",
+        "title": "",
+        "road": "Santisuk",
+        "houseNumber": "28/1",
+        "street": "5",
+        "amenities": {
+          "__typename": "AmenitiesType",
+          "hasPhone": false,
+          "hasAir": true,
+          "hasFan": false,
+          "hasTV": false,
+          "hasRefrigerator": false,
+          "hasFurniture": true,
+          "hasWaterHeater": true,
+          "hasInternet": true,
+          "allowPet": false,
+          "allowSmoking": false,
+          "hasKeyCardAccess": true,
+          "hasFingerPrintAccess": false,
+          "hasSecurity": false,
+          "hasCCTV": true,
+          "hasBicycleParking": true,
+          "hasParking": true,
+          "hasPool": false,
+          "hasFitness": false,
+          "hasLaundry": true,
+          "hasSalon": false,
+          "hasLift": false,
+          "hasShop": false,
+          "hasRestaurant": false,
+          "hasCableTV": false,
+          "hasEvCharger": false
+        },
+        "apartmentIsHotel": false,
+        "province": "Chiang Mai",
+        "district": "Muang Chiang Mai",
+        "subdistrict": "Chang Phuak",
+        "sponsorPackage": "EXCLUSIVE",
+        "hasVirtualTour": false,
+        "distance": null,
+        "propertyType": "APARTMENT",
+        "userId": "647014",
+        "addressDocument": null,
+        "addressPhoto": null,
+        "price": {
+          "__typename": "SearchListingPriceType",
+          "monthly": {
+            "__typename": "MonthlyPriceType",
+            "minPrice": 3800,
+            "maxPrice": 8000,
+            "type": "AMOUNT"
+          },
+          "daily": {
+            "__typename": "DailyPriceType",
+            "minPrice": 0,
+            "maxPrice": 0,
+            "type": "CALL"
+          },
+          "shortTerm": {
+            "__typename": "ShortTermPriceType",
+            "shortContract": true,
+            "minPrice": 7000,
+            "maxPrice": 8000,
+            "oneMonth": {
+              "__typename": "ShortTermPriceByType",
+              "shortContract": true,
+              "minPrice": 8000,
+              "maxPrice": 8000
+            },
+            "threeMonth": {
+              "__typename": "ShortTermPriceByType",
+              "shortContract": true,
+              "minPrice": 7500,
+              "maxPrice": 7500
+            },
+            "sixMonth": {
+              "__typename": "ShortTermPriceByType",
+              "shortContract": true,
+              "minPrice": 7000,
+              "maxPrice": 7000
+            }
+          }
+        },
+        "promotion": {
+          "__typename": "PromotionType",
+          "type": "NO_PROMOTION",
+          "start": null,
+          "end": null,
+          "detail": ""
+        },
+        "modifiedAt": "2026-07-26T04:45:39.227Z",
+        "refreshedAt": "2026-07-26T04:45:39.221Z",
+        "updatedAt": "2026-07-26T04:45:39.227Z",
+        "createdAt": "2026-06-01T09:32:34.908Z"
+      },
+      {
+        "__typename": "ListingSearchResultConsumerType",
+        "id": "52205",
+        "coverPicture": "/listing_picture/202002/20200207/BpoVbUmMbmjW4Fny68c9.jpg",
+        "slug": "my-house-apartment-2",
+        "name": "My house apartment 2 ",
+        "title": "",
+        "road": "",
+        "houseNumber": "",
+        "street": "",
+        "amenities": {
+          "__typename": "AmenitiesType",
+          "hasPhone": true,
+          "hasAir": true,
+          "hasFan": false,
+          "hasTV": false,
+          "hasRefrigerator": false,
+          "hasFurniture": true,
+          "hasWaterHeater": true,
+          "hasInternet": true,
+          "allowPet": false,
+          "allowSmoking": false,
+          "hasKeyCardAccess": true,
+          "hasFingerPrintAccess": false,
+          "hasSecurity": false,
+          "hasCCTV": true,
+          "hasBicycleParking": false,
+          "hasParking": true,
+          "hasPool": false,
+          "hasFitness": false,
+          "hasLaundry": true,
+          "hasSalon": false,
+          "hasLift": true,
+          "hasShop": false,
+          "hasRestaurant": false,
+          "hasCableTV": false,
+          "hasEvCharger": false
+        },
+        "apartmentIsHotel": false,
+        "province": "Chiang Mai",
+        "district": "Muang Chiang Mai",
+        "subdistrict": "Chang Phuak",
+        "sponsorPackage": "EXCLUSIVE",
+        "hasVirtualTour": false,
+        "distance": null,
+        "propertyType": "APARTMENT",
+        "userId": "182140",
+        "addressDocument": {
+          "__typename": "VerificationDocumentType",
+          "reviewStatus": "VERIFIED"
+        },
+        "addressPhoto": {
+          "__typename": "VerificationDocumentType",
+          "reviewStatus": "VERIFIED"
+        },
+        "price": {
+          "__typename": "SearchListingPriceType",
+          "monthly": {
+            "__typename": "MonthlyPriceType",
+            "minPrice": 5000,
+            "maxPrice": 5000,
+            "type": "AMOUNT"
+          },
+          "daily": {
+            "__typename": "DailyPriceType",
+            "minPrice": 590,
+            "maxPrice": 590,
+            "type": "AMOUNT"
+          },
+          "shortTerm": {
+            "__typename": "ShortTermPriceType",
+            "shortContract": false,
+            "minPrice": null,
+            "maxPrice": null,
+            "oneMonth": {
+              "__typename": "ShortTermPriceByType",
+              "shortContract": false,
+              "minPrice": null,
+              "maxPrice": null
+            },
+            "threeMonth": {
+              "__typename": "ShortTermPriceByType",
+              "shortContract": false,
+              "minPrice": null,
+              "maxPrice": null
+            },
+            "sixMonth": {
+              "__typename": "ShortTermPriceByType",
+              "shortContract": false,
+              "minPrice": null,
+              "maxPrice": null
+            }
+          }
+        },
+        "promotion": {
+          "__typename": "PromotionType",
+          "type": "ONLY_FOR_RENTHUB",
+          "start": "2020-02-29T17:00:00.000Z",
+          "end": "2020-03-09T17:00:00.000Z",
+          "detail": "ส่วนลดพิเศษห้องรายวันเหลือเพียง 490 บาท/วัน เมื่อเข้าพัก 3 วันขึ้นไป"
+        },
+        "modifiedAt": "2026-06-13T11:03:34.489Z",
+        "refreshedAt": "2026-06-13T11:03:34.480Z",
+        "updatedAt": "2026-06-13T11:03:34.489Z",
+        "createdAt": "2019-12-04T07:25:08.253Z"
+      },
+      {
+        "__typename": "ListingSearchResultConsumerType",
+        "id": "64265",
+        "coverPicture": "/listing_picture/202210/20221016/x9YoktzMV1tvpqcZCVNR.jpg",
+        "slug": "my-house-apartment-4",
+        "name": "My house apartment 4 ",
+        "title": "",
+        "road": "",
+        "houseNumber": "",
+        "street": "",
+        "amenities": {
+          "__typename": "AmenitiesType",
+          "hasPhone": false,
+          "hasAir": true,
+          "hasFan": false,
+          "hasTV": true,
+          "hasRefrigerator": true,
+          "hasFurniture": true,
+          "hasWaterHeater": true,
+          "hasInternet": true,
+          "allowPet": false,
+          "allowSmoking": false,
+          "hasKeyCardAccess": true,
+          "hasFingerPrintAccess": false,
+          "hasSecurity": false,
+          "hasCCTV": true,
+          "hasBicycleParking": true,
+          "hasParking": true,
+          "hasPool": false,
+          "hasFitness": false,
+          "hasLaundry": true,
+          "hasSalon": false,
+          "hasLift": true,
+          "hasShop": false,
+          "hasRestaurant": false,
+          "hasCableTV": false,
+          "hasEvCharger": false
+        },
+        "apartmentIsHotel": false,
+        "province": "Chiang Mai",
+        "district": "Muang Chiang Mai",
+        "subdistrict": "Pa Tan",
+        "sponsorPackage": "EXCLUSIVE",
+        "hasVirtualTour": false,
+        "distance": null,
+        "propertyType": "APARTMENT",
+        "userId": "182140",
+        "addressDocument": null,
+        "addressPhoto": null,
+        "price": {
+          "__typename": "SearchListingPriceType",
+          "monthly": {
+            "__typename": "MonthlyPriceType",
+            "minPrice": 5000,
+            "maxPrice": 5000,
+            "type": "AMOUNT"
+          },
+          "daily": {
+            "__typename": "DailyPriceType",
+            "minPrice": 590,
+            "maxPrice": 590,
+            "type": "AMOUNT"
+          },
+          "shortTerm": {
+            "__typename": "ShortTermPriceType",
+            "shortContract": false,
+            "minPrice": null,
+            "maxPrice": null,
+            "oneMonth": {
+              "__typename": "ShortTermPriceByType",
+              "shortContract": false,
+              "minPrice": null,
+              "maxPrice": null
+            },
+            "threeMonth": {
+              "__typename": "ShortTermPriceByType",
+              "shortContract": false,
+              "minPrice": null,
+              "maxPrice": null
+            },
+            "sixMonth": {
+              "__typename": "ShortTermPriceByType",
+              "shortContract": false,
+              "minPrice": null,
+              "maxPrice": null
+            }
+          }
+        },
+        "promotion": {
+          "__typename": "PromotionType",
+          "type": "GENERAL",
+          "start": "2022-09-16T17:00:00.000Z",
+          "end": "2022-10-30T17:00:00.000Z",
+          "detail": null
+        },
+        "modifiedAt": "2026-06-13T11:02:42.572Z",
+        "refreshedAt": "2026-06-13T11:02:42.567Z",
+        "updatedAt": "2026-06-13T11:02:42.572Z",
+        "createdAt": "2022-09-16T09:44:05.317Z"
+      }
+    ],
+    "shortTerm": null,
+    "pagination": {
+      "__typename": "PaginationType",
+      "page": 1,
+      "perPage": 40,
+      "totalCount": 361,
+      "totalPages": 10
+    },
+    "propertyType": "APARTMENT",
+    "rentalType": "DAILY",
+    "price": {
+      "rentalType": "DAILY"
+    },
+    "massTransitZones": [
+      {
+        "__typename": "ZoneSearchResultType",
+        "id": "16918",
+        "name": "BTS National Stadium",
+        "slug": "bts-national-stadium",
+        "zoneType": "MASS_TRANSIT",
+        "zoneSubType": "DARK_GREEN_LINE",
+        "zoneInformation": {
+          "stationCode": "W1",
+          "provinceCode": 10,
+          "zoneTags": [],
+          "stationOrder": 1,
+          "status": "IS_OPEN"
+        },
+        "listingCount": {
+          "__typename": "ListingCountType",
+          "monthly": 88,
+          "daily": 24
+        }
+      },
+      {
+        "__typename": "ZoneSearchResultType",
+        "id": "16927",
+        "name": "BTS Khu Khot",
+        "slug": "bts-khu-khot",
+        "zoneType": "MASS_TRANSIT",
+        "zoneSubType": "LIGHT_GREEN_LINE",
+        "zoneInformation": {
+          "stationCode": "N24",
+          "provinceCode": 10,
+          "openingOnDate": "1/12/2020",
+          "zoneTags": [],
+          "stationOrder": 1,
+          "status": "IS_OPEN"
+        },
+        "listingCount": {
+          "__typename": "ListingCountType",
+          "monthly": 32,
+          "daily": 6
+        }
+      }
+    ],
+    "device": "desktop",
+    "propertyhubZone": {
+      "__typename": "ZoneForRenthubTypeByPropertyType",
+      "CONDO": {
+        "__typename": "ZoneForRenthubType",
+        "name": "Chiang Mai",
+        "slug": "chiang-mai",
+        "zoneType": "PROVINCE",
+        "zoneSubType": "NORTHERN_PROVINCE",
+        "listingCountPerPostType": {
+          "__typename": "ListingCountType",
+          "FOR_RENT": {
+            "__typename": "ListingCountPerPostTypeType",
+            "listingCount": 676
+          },
+          "FOR_SALE": {
+            "__typename": "ListingCountPerPostTypeType",
+            "listingCount": 968
+          }
+        }
+      },
+      "HOME": {
+        "__typename": "ZoneForRenthubType",
+        "name": "Chiang Mai",
+        "slug": "chiang-mai",
+        "zoneType": "PROVINCE",
+        "zoneSubType": "NORTHERN_PROVINCE",
+        "listingCountPerPostType": {
+          "__typename": "ListingCountType",
+          "FOR_RENT": {
+            "__typename": "ListingCountPerPostTypeType",
+            "listingCount": 837
+          },
+          "FOR_SALE": {
+            "__typename": "ListingCountPerPostTypeType",
+            "listingCount": 1319
+          }
+        }
+      },
+      "TOWN_HOUSE": {
+        "__typename": "ZoneForRenthubType",
+        "name": "Chiang Mai",
+        "slug": "chiang-mai",
+        "zoneType": "PROVINCE",
+        "zoneSubType": "NORTHERN_PROVINCE",
+        "listingCountPerPostType": {
+          "__typename": "ListingCountType",
+          "FOR_RENT": {
+            "__typename": "ListingCountPerPostTypeType",
+            "listingCount": 118
+          },
+          "FOR_SALE": {
+            "__typename": "ListingCountPerPostTypeType",
+            "listingCount": 110
+          }
+        }
+      },
+      "LAND": {
+        "__typename": "ZoneForRenthubType",
+        "name": "Chiang Mai",
+        "slug": "chiang-mai",
+        "zoneType": "PROVINCE",
+        "zoneSubType": "NORTHERN_PROVINCE",
+        "listingCountPerPostType": {
+          "__typename": "ListingCountType",
+          "FOR_RENT": {
+            "__typename": "ListingCountPerPostTypeType",
+            "listingCount": 14
+          },
+          "FOR_SALE": {
+            "__typename": "ListingCountPerPostTypeType",
+            "listingCount": 559
+          }
+        }
+      }
+    },
+    "propertyhubListings": null,
+    "fixZoneTitlePrice": false,
+    "apartmentIsHotel": false,
+    "__lang": "en",
+    "__namespaces": {}
+  },
+  "__N_SSP": true
+}
