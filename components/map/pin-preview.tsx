@@ -1,7 +1,8 @@
 "use client";
 
 import { AdvancedMarker } from "@vis.gl/react-google-maps";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { type MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import { thumbUrl } from "@/lib/images";
 import { formatPriceFull } from "@/lib/listings/format";
@@ -30,7 +31,10 @@ export function PinPreview({ pinsById, mode }: PinPreviewProps) {
   const [shownId, setShownId] = useState<string | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const overPopover = useRef(false);
+  /** Set when a press starts on a carousel arrow, so the marker's click doesn't select. */
+  const navPress = useRef(false);
   const select = useMapUi((s) => s.select);
+  const selectedId = useMapUi((s) => s.selectedId);
 
   const scheduleHide = useCallback(() => {
     clearTimeout(hideTimer.current);
@@ -65,7 +69,14 @@ export function PinPreview({ pinsById, mode }: PinPreviewProps) {
     overPopover.current = false;
     scheduleHide();
   }, [scheduleHide]);
+  const setNavPress = useCallback((pressed: boolean) => {
+    navPress.current = pressed;
+  }, []);
   const onClick = useCallback(() => {
+    if (navPress.current) {
+      navPress.current = false;
+      return;
+    }
     if (shownId !== null) select(shownId, "pin");
   }, [select, shownId]);
 
@@ -80,23 +91,11 @@ export function PinPreview({ pinsById, mode }: PinPreviewProps) {
       onMouseLeave={onMouseLeave}
       onClick={onClick}
       anchorLeft="-50%"
-      anchorTop="calc(-100% - 38px)"
+      // Clears the pin with a ~4px gap; the selected pin is drawn larger.
+      anchorTop={shownId === selectedId ? "calc(-100% - 38px)" : "calc(-100% - 32px)"}
     >
       <div className="w-[200px] overflow-hidden rounded-lg bg-white text-neutral-900 shadow-xl ring-1 ring-black/10">
-        {listing.cover ? (
-          <img
-            src={thumbUrl(listing.cover)}
-            alt=""
-            loading="lazy"
-            width={200}
-            height={150}
-            className="h-[150px] w-[200px] bg-neutral-100 object-cover"
-          />
-        ) : (
-          <div className="flex h-[150px] w-[200px] items-center justify-center bg-neutral-100 text-xs text-neutral-500">
-            No photo
-          </div>
-        )}
+        <PreviewPhotos key={listing.id} listing={listing} onNavPress={setNavPress} />
         <div className="flex flex-col gap-0.5 p-2 text-xs">
           <div className="line-clamp-2 text-sm leading-tight font-medium">{listing.name}</div>
           <div className={cn(mode === "day" ? "font-semibold" : "text-neutral-500")}>
@@ -108,5 +107,97 @@ export function PinPreview({ pinsById, mode }: PinPreviewProps) {
         </div>
       </div>
     </AdvancedMarker>
+  );
+}
+
+const arrowClass =
+  "absolute top-1/2 z-10 flex size-6 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutral-900 shadow ring-1 ring-black/10 hover:bg-white";
+
+type PreviewPhotosProps = {
+  listing: PinListing;
+  /** Called with `true` when a press starts on an arrow, `false` for any other press. */
+  onNavPress: (pressed: boolean) => void;
+};
+
+/**
+ * Small thumbnail carousel for the hover preview. Only the current photo and its neighbours are
+ * mounted, so the next one preloads. Arrow presses are reported via `onNavPress`: the marker's `gmp-click` fires
+ * on the marker element, outside React's propagation, so `stopPropagation` alone can't stop it.
+ */
+function PreviewPhotos({ listing, onNavPress }: PreviewPhotosProps) {
+  const pictures =
+    listing.pictures.length > 0 ? listing.pictures : listing.cover ? [listing.cover] : [];
+  const count = pictures.length;
+  const [index, setIndex] = useState(0);
+
+  const step = useCallback(
+    (delta: number) => (event: MouseEvent) => {
+      event.stopPropagation();
+      setIndex((current) => (current + delta + count) % count);
+    },
+    [count],
+  );
+  const pressArrow = useCallback(() => onNavPress(true), [onNavPress]);
+
+  if (count === 0) {
+    return (
+      <div className="flex h-[150px] w-[200px] items-center justify-center bg-neutral-100 text-xs text-neutral-500">
+        No photo
+      </div>
+    );
+  }
+
+  const mounted = new Map<number, number>();
+  for (const offset of [0, 1, -1]) {
+    const i = (index + offset + count) % count;
+    if (!mounted.has(i)) mounted.set(i, offset);
+  }
+
+  return (
+    <div
+      className="relative h-[150px] w-[200px] overflow-hidden bg-neutral-100"
+      onPointerDownCapture={() => onNavPress(false)}
+    >
+      {[...mounted].map(([i, offset]) => (
+        <img
+          key={i}
+          src={thumbUrl(pictures[i])}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          width={200}
+          height={150}
+          aria-hidden={offset !== 0}
+          className="absolute inset-0 size-full object-cover"
+          style={{ transform: `translateX(${String(offset * 100)}%)` }}
+        />
+      ))}
+      {count > 1 ? (
+        <>
+          <button
+            type="button"
+            className={cn(arrowClass, "left-1.5")}
+            aria-label="Previous photo"
+            onPointerDown={pressArrow}
+            onClick={step(-1)}
+          >
+            <ChevronLeft className="size-4" aria-hidden />
+          </button>
+          <button
+            type="button"
+            className={cn(arrowClass, "right-1.5")}
+            aria-label="Next photo"
+            onPointerDown={pressArrow}
+            onClick={step(1)}
+          >
+            <ChevronRight className="size-4" aria-hidden />
+          </button>
+          <span className="pointer-events-none absolute right-1.5 bottom-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white tabular-nums">
+            {index + 1}/{count}
+          </span>
+        </>
+      ) : null}
+    </div>
   );
 }
