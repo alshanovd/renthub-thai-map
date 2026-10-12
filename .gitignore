@@ -47,3 +47,7 @@ plans/
 # agent docs are committed (override global excludes)
 !AGENTS.md
 !CLAUDE.md
+# agent skills installed by `vercel integration add` (local only)
+.agents/
+.claude/skills/
+skills-lock.json
