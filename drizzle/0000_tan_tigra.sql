@@ -1,0 +1,57 @@
+CREATE TABLE "listings" (
+	"id" text PRIMARY KEY NOT NULL,
+	"slug" text NOT NULL,
+	"slug_th" text,
+	"name" text NOT NULL,
+	"title" text,
+	"province" text,
+	"district" text,
+	"subdistrict" text,
+	"road" text,
+	"street" text,
+	"house_number" text,
+	"lat" double precision,
+	"lng" double precision,
+	"daily_type" text NOT NULL,
+	"daily_min" integer,
+	"daily_max" integer,
+	"monthly_type" text NOT NULL,
+	"monthly_min" integer,
+	"monthly_max" integer,
+	"cover_picture" text,
+	"pictures" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"rooms" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"amenities" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"fees" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"nearby_zones" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"description" text,
+	"sponsor_package" text,
+	"review_score" real,
+	"review_count" integer DEFAULT 0 NOT NULL,
+	"total_views" integer,
+	"source_searches" text[] DEFAULT '{}' NOT NULL,
+	"renthub_updated_at" timestamp with time zone,
+	"renthub_refreshed_at" timestamp with time zone,
+	"detail_fetched_at" timestamp with time zone NOT NULL,
+	"first_seen_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"last_seen_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"deleted_at" timestamp with time zone
+);
+--> statement-breakpoint
+CREATE TABLE "scrape_runs" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"started_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"finished_at" timestamp with time zone,
+	"status" text DEFAULT 'running' NOT NULL,
+	"searches" text[] DEFAULT '{}' NOT NULL,
+	"partial" boolean DEFAULT false NOT NULL,
+	"list_count" integer DEFAULT 0 NOT NULL,
+	"detail_count" integer DEFAULT 0 NOT NULL,
+	"upserted" integer DEFAULT 0 NOT NULL,
+	"no_location" integer DEFAULT 0 NOT NULL,
+	"soft_deleted" integer DEFAULT 0 NOT NULL,
+	"error" text
+);
+--> statement-breakpoint
+CREATE INDEX "listings_deleted_at_idx" ON "listings" USING btree ("deleted_at");--> statement-breakpoint
+CREATE INDEX "listings_daily_min_idx" ON "listings" USING btree ("daily_min");
