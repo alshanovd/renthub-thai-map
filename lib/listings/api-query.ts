@@ -18,7 +18,7 @@ import {
 } from "./api-sql";
 import type { Search } from "./filter";
 import { LISTINGS_TAG, queryLastScrapeAt, summaryColumns, toListingSummary } from "./query";
-import type { ListingCard, Pin } from "./types";
+import type { ListingCard, PinTuple } from "./types";
 
 /**
  * Cached queries behind the data API. Every function is `"use cache"`, keyed by its
@@ -40,7 +40,7 @@ export async function getLastScrapeAt(): Promise<string | null> {
 }
 
 /** Filtered active listings with coordinates inside `bbox`, sorted by `search.sort`. */
-export async function getPins(bbox: Bounds, search: Search): Promise<Pin[]> {
+export async function getPins(bbox: Bounds, search: Search): Promise<PinTuple[]> {
   "use cache";
   cacheTag(LISTINGS_TAG);
   cacheLife("days");

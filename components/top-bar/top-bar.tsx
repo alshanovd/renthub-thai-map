@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "cn";
 import { SlidersHorizontal } from "lucide-react";
 import { useId, useRef, useState } from "react";
@@ -27,7 +28,8 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { DEFAULT_SEARCH, matchesSearch, type Search, type SortOrder } from "@/lib/listings/filter";
-import type { ListingSummary, PriceMode } from "@/lib/listings/types";
+import type { PriceMode } from "@/lib/listings/types";
+import { cachedCard } from "@/lib/queries";
 import { isDefaultSearch, PRICE_RANGE, SORT_ORDERS, useAppliedSearch } from "@/lib/search-params";
 import { useMapUi } from "@/lib/store";
 
@@ -54,14 +56,6 @@ function maxLabel(mode: PriceMode, max: number): string {
   return `Max ฿${value} / ${mode === "month" ? "mo" : "day"}`;
 }
 
-type TopBarProps = {
-  /** Every listing in the payload (to check whether the selection survives a new search). */
-  listings: readonly ListingSummary[];
-  /** The payload after the applied search. */
-  filtered: readonly ListingSummary[];
-  lastScrapeAt: string | null;
-};
-
 /**
  * Search controls. Every control applies at once: the slider on release (pointer up or a
  * keyboard step, not while dragging), the mode toggle, the call-for-price switch and sort on
@@ -70,18 +64,23 @@ type TopBarProps = {
  * Under `md` the bar collapses (CSS) to the logo, the mode toggle and a "Filters" button that
  * opens a drawer with the same slider, switch and sort.
  */
-export function TopBar({ listings, filtered, lastScrapeAt }: TopBarProps) {
+export function TopBar() {
   const [applied, setApplied] = useAppliedSearch();
+  const queryClient = useQueryClient();
   const callId = useId();
   const drawerCallId = useId();
 
-  /** Applies a search; keeps the selection only if it still passes the new filter. */
+  /**
+   * Applies a search; keeps the selection only if it still passes the new filter, judged on its
+   * cached card. A selection whose card isn't loaded yet is kept.
+   */
   const apply = (next: Search) => {
     setApplied(next);
     const { selectedId, select } = useMapUi.getState();
     if (selectedId === null) return;
-    const listing = listings.find((item) => item.id === selectedId);
-    if (!listing || !matchesSearch(listing, next)) select(null, null);
+    const listing = cachedCard(queryClient, selectedId);
+    if (listing === undefined) return;
+    if (listing === null || listing.deleted || !matchesSearch(listing, next)) select(null, null);
   };
 
   const onModeChange = (value: string) => {
@@ -125,12 +124,7 @@ export function TopBar({ listings, filtered, lastScrapeAt }: TopBarProps) {
 
       <SortSelect applied={applied} setApplied={setApplied} className="max-md:hidden" />
 
-      <StatusText
-        listings={listings}
-        filtered={filtered}
-        lastScrapeAt={lastScrapeAt}
-        className="ml-auto max-md:hidden"
-      />
+      <StatusText className="ml-auto max-md:hidden" />
 
       <Drawer>
         <DrawerTrigger asChild>

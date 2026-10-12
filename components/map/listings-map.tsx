@@ -8,13 +8,12 @@ import {
 } from "@vis.gl/react-google-maps";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
-import type { PriceMode } from "@/lib/listings/types";
+import type { Pin, PriceMode } from "@/lib/listings/types";
 import { useMapUi } from "@/lib/store";
 
 import { ClusteredPins } from "./clusterer";
 import { FavoritesFit } from "./favorites-fit";
 import { PinPreview } from "./pin-preview";
-import type { PinListing } from "./price-pin";
 import { SelectionPan } from "./selection-pan";
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
@@ -26,8 +25,10 @@ const DEFAULT_ZOOM = 13;
 const BOUNDS_DEBOUNCE_MS = 150;
 
 type ListingsMapProps = {
-  /** Listings to draw (all have coordinates). On the Favorites tab: the favorite pins. */
-  pins: readonly PinListing[];
+  /** Pins to draw. On the Favorites tab: the favorite pins (built from their cards). */
+  pins: readonly Pin[];
+  /** False while the Favorites tab's card data is still loading (delays the favorites fit). */
+  fitReady: boolean;
   mode: PriceMode;
   favoriteIds: ReadonlySet<string>;
   /** Mobile layout: the list sheet covers the bottom, so the zoom control moves to the top. */
@@ -38,9 +39,16 @@ const ZOOM_TOP = { position: ControlPosition.RIGHT_TOP };
 
 /**
  * Uncontrolled Google Map (only `defaultCenter`/`defaultZoom`, never `center`/`zoom`), so the
- * app never fights the user's camera. Reports the visible bounds to the store on `idle`.
+ * app never fights the user's camera. Reports the visible bounds and zoom to the store on `idle`
+ * (they drive the pins request).
  */
-export function ListingsMap({ pins, mode, favoriteIds, compact = false }: ListingsMapProps) {
+export function ListingsMap({
+  pins,
+  fitReady,
+  mode,
+  favoriteIds,
+  compact = false,
+}: ListingsMapProps) {
   const setBounds = useMapUi((s) => s.setBounds);
   const selectedId = useMapUi((s) => s.selectedId);
   const select = useMapUi((s) => s.select);
@@ -53,7 +61,7 @@ export function ListingsMap({ pins, mode, favoriteIds, compact = false }: Listin
       clearTimeout(boundsTimer.current);
       boundsTimer.current = setTimeout(() => {
         const bounds = event.map.getBounds();
-        if (bounds) setBounds(bounds.toJSON());
+        if (bounds) setBounds(bounds.toJSON(), event.map.getZoom() ?? null);
       }, BOUNDS_DEBOUNCE_MS);
     },
     [setBounds],
@@ -90,7 +98,7 @@ export function ListingsMap({ pins, mode, favoriteIds, compact = false }: Listin
         <ClusteredPins pins={pins} mode={mode} favoriteIds={favoriteIds} selectedId={selectedId} />
         <PinPreview pinsById={pinsById} mode={mode} />
         <SelectionPan pinsById={pinsById} />
-        <FavoritesFit pins={pins} />
+        <FavoritesFit pins={pins} ready={fitReady} />
       </GoogleMap>
     </APIProvider>
   );

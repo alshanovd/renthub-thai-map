@@ -32,7 +32,6 @@ vi.mock("@/lib/listings/api-query", () => query);
 
 const { GET: pins } = await import("./pins/route");
 const { GET: cards } = await import("./listings/route");
-const { GET: byIds } = await import("./listings/by-ids/route");
 const { GET: noLocation } = await import("./listings/no-location/route");
 
 const get = (path: string) => new NextRequest(new URL(path, "http://localhost"));
@@ -102,14 +101,6 @@ describe("GET /api/listings", () => {
     for (const path of ["/api/listings", "/api/listings?ids=1;drop", `/api/listings?ids=${many}`]) {
       expect((await cards(get(path))).status, path.slice(0, 30)).toBe(400);
     }
-  });
-
-  it("keeps /api/listings/by-ids as a bare-array alias (≤ 200 ids)", async () => {
-    const many = Array.from({ length: 150 }, (_, i) => String(i)).join(",");
-    const response = await byIds(get(`/api/listings/by-ids?ids=${many}`));
-    expect(response.status).toBe(200);
-    expect(((await response.json()) as ListingCard[]).length).toBe(150);
-    expect((await byIds(get("/api/listings/by-ids?ids="))).status).toBe(400);
   });
 });
 

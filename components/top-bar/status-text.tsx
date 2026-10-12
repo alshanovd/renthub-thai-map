@@ -4,9 +4,10 @@ import { cn } from "cn";
 import { useMemo, useSyncExternalStore } from "react";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Spinner } from "@/components/ui-ext/spinner";
 import { relativeTime } from "@/lib/listings/format";
-import type { ListingSummary } from "@/lib/listings/types";
-import { computeTabCounts } from "@/lib/listings/visible";
+import { pinsInView } from "@/lib/listings/visible";
+import { usePins } from "@/lib/queries";
 import { useMapUi } from "@/lib/store";
 
 const MINUTE = 60_000;
@@ -33,28 +34,20 @@ const absoluteFormat = new Intl.DateTimeFormat("en-GB", {
 const intFormat = new Intl.NumberFormat("en-US");
 
 type StatusTextProps = {
-  listings: readonly ListingSummary[];
-  filtered: readonly ListingSummary[];
-  lastScrapeAt: string | null;
   /** One row (`124 in view · 228 total` left, `Updated …` right) for the mobile sheet. */
   inline?: boolean;
   className?: string;
 };
 
-/** `124 in view · 228 total` (the On map tab's count) and `Updated 3 hours ago`. */
-export function StatusText({
-  listings,
-  filtered,
-  lastScrapeAt,
-  inline = false,
-  className,
-}: StatusTextProps) {
+/**
+ * `124 in view · 228 total` (the On map tab's count; from the pins response) with a spinner
+ * while pins load, and `Updated 3 hours ago` (the last scrape, also from the pins response).
+ */
+export function StatusText({ inline = false, className }: StatusTextProps) {
   const bounds = useMapUi((s) => s.bounds);
   const now = useNow();
-  const inView = useMemo(
-    () => computeTabCounts({ listings, filtered, bounds, favoriteIds: [] }).map,
-    [listings, filtered, bounds],
-  );
+  const { pins, total, lastScrapeAt, loaded, isFetching } = usePins();
+  const inView = useMemo(() => pinsInView(pins, bounds).length, [pins, bounds]);
 
   return (
     <div
@@ -64,11 +57,19 @@ export function StatusText({
         className,
       )}
     >
-      <span className="whitespace-nowrap tabular-nums" aria-live="polite">
-        {bounds === null ? "" : `${intFormat.format(inView)} in view · `}
-        {intFormat.format(filtered.length)} total
+      <span
+        className="flex items-center gap-1.5 whitespace-nowrap tabular-nums"
+        aria-live="polite"
+        aria-busy={isFetching}
+      >
+        {isFetching ? <Spinner className="size-3" label="Loading listings" /> : null}
+        {total === null
+          ? isFetching
+            ? "Loading…"
+            : ""
+          : `${bounds === null || !loaded ? "" : `${intFormat.format(inView)} in view · `}${intFormat.format(total)} total`}
       </span>
-      {now !== null && (
+      {now !== null && loaded && (
         <Tooltip>
           <TooltipTrigger asChild>
             <span className="cursor-default whitespace-nowrap" tabIndex={0}>

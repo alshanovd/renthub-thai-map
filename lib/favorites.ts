@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
-
-import type { ListingSummary } from "@/lib/listings/types";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 
 export const FAVORITES_KEY = "renthub-map:favorites:v1";
 
@@ -151,64 +149,4 @@ export function useFavorites(store: FavoritesStore = favoritesStore): Favorites 
   const idSet = useMemo(() => new Set(ids), [ids]);
   const isFavorite = useCallback((id: string) => idSet.has(id), [idSet]);
   return { ids, idSet, isFavorite, toggle: store.toggle };
-}
-
-const LISTING_ID = /^[\w-]{1,64}$/;
-const BY_IDS_LIMIT = 200;
-
-/**
- * Favorites missing from the payload (soft-deleted or newer than the cache), resolved once via
- * `/api/listings/by-ids` and kept in memory for the page's lifetime. `null` = unknown id.
- */
-const extrasCache = new Map<string, ListingSummary | null>();
-const extrasInFlight = new Set<string>();
-
-async function fetchExtras(ids: readonly string[]): Promise<void> {
-  for (let start = 0; start < ids.length; start += BY_IDS_LIMIT) {
-    const chunk = ids.slice(start, start + BY_IDS_LIMIT);
-    for (const id of chunk) extrasInFlight.add(id);
-    try {
-      const response = await fetch(`/api/listings/by-ids?ids=${chunk.join(",")}`);
-      if (!response.ok) continue;
-      const listings = (await response.json()) as ListingSummary[];
-      for (const listing of listings) extrasCache.set(listing.id, listing);
-      for (const id of chunk) if (!extrasCache.has(id)) extrasCache.set(id, null);
-    } catch {
-      // Offline or server error: try again the next time the favorites change.
-    } finally {
-      for (const id of chunk) extrasInFlight.delete(id);
-    }
-  }
-}
-
-/**
- * Favorite listings that aren't in `listings` (the payload), fetched once per id from
- * `/api/listings/by-ids`. Returned in `ids` order; ids that can't be resolved are left out.
- */
-export function useFavoriteExtras(
-  ids: readonly string[],
-  listings: readonly ListingSummary[],
-): readonly ListingSummary[] {
-  const payloadIds = useMemo(() => new Set(listings.map((listing) => listing.id)), [listings]);
-  const missing = useMemo(() => ids.filter((id) => !payloadIds.has(id)), [ids, payloadIds]);
-  const [resolved, setResolved] = useState<ReadonlyMap<string, ListingSummary | null>>(
-    () => new Map(extrasCache),
-  );
-
-  useEffect(() => {
-    const toFetch = missing.filter(
-      (id) => LISTING_ID.test(id) && !extrasCache.has(id) && !extrasInFlight.has(id),
-    );
-    if (toFetch.length === 0) return;
-    void fetchExtras(toFetch).then(() => setResolved(new Map(extrasCache)));
-  }, [missing]);
-
-  return useMemo(
-    () =>
-      missing.flatMap((id) => {
-        const listing = resolved.get(id);
-        return listing ? [listing] : [];
-      }),
-    [missing, resolved],
-  );
 }

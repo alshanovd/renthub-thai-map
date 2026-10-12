@@ -46,6 +46,20 @@ export function formatPinLabel(range: PriceRange, mode: PriceMode): string {
 }
 
 /**
+ * Pin label from a decoded pin's price: same output as `formatPinLabel` (`฿500`, `฿7.5k`,
+ * `Call`, or `—` when an amount pin has no price).
+ */
+export function formatPinPrice(
+  price: number | null,
+  kind: "amount" | "call",
+  mode: PriceMode,
+): string {
+  if (kind === "call") return "Call";
+  if (price === null) return DASH;
+  return `${THB}${number(price, mode)}`;
+}
+
+/**
  * Full price for cards: `฿500 / day`, `฿500–700 / day`, `฿7,500 / mo`,
  * `Call for price`, `No daily rental` / `No monthly rental`, or `—`.
  */

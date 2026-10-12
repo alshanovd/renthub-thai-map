@@ -5,9 +5,12 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { type PointerEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import { Dialog, DialogOverlay, DialogPortal, DialogTitle } from "@/components/ui/dialog";
+import { LazyImage } from "@/components/ui-ext/lazy-image";
+import { Spinner } from "@/components/ui-ext/spinner";
 import { useFavorites } from "@/lib/favorites";
 import { fullUrl, listingUrl, thumbUrl } from "@/lib/images";
 import type { ListingSummary } from "@/lib/listings/types";
+import { useCard } from "@/lib/queries";
 import { type ViewerTarget, useMapUi } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -20,17 +23,13 @@ const roundButton =
 const arrowButton =
   "absolute top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white ring-1 ring-white/20 backdrop-blur transition-colors hover:bg-black/70 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none";
 
-type ImageViewerProps = {
-  /** Every listing that can be viewed (payload plus fetched favorites). */
-  listingsById: ReadonlyMap<string, ListingSummary>;
-};
-
 /**
- * Almost full-screen photo viewer for `useMapUi().viewer`. Full-size images (no
- * `?class=thumbnail`) over a blurred thumbnail placeholder; ←/→ keys, buttons and swipe, wrapping
- * at both ends; Esc closes. On close, focus returns to the card photo that opened it.
+ * Almost full-screen photo viewer for `useMapUi().viewer`, reading the listing's card
+ * (`useCard`; a centered spinner until it arrives). Full-size images (no `?class=thumbnail`)
+ * over a blurred thumbnail placeholder with a spinner; ←/→ keys, buttons and swipe, wrapping at
+ * both ends; Esc closes. On close, focus returns to the card photo that opened it.
  */
-export function ImageViewer({ listingsById }: ImageViewerProps) {
+export function ImageViewer() {
   const viewer = useMapUi((s) => s.viewer);
   const closeViewer = useMapUi((s) => s.closeViewer);
 
@@ -38,8 +37,10 @@ export function ImageViewer({ listingsById }: ImageViewerProps) {
   const [shown, setShown] = useState<ViewerTarget | null>(viewer);
   if (viewer !== null && viewer !== shown) setShown(viewer);
 
-  const listing = shown ? listingsById.get(shown.listingId) : undefined;
-  const open = viewer !== null && listingsById.has(viewer.listingId);
+  const card = useCard(shown ? shown.listingId : null);
+  const listing = card.data ?? undefined;
+  // An unknown id (null card) closes; a card still loading shows a spinner.
+  const open = viewer !== null && card.data !== null;
 
   const onCloseAutoFocus = useCallback(
     (event: Event) => {
@@ -77,7 +78,16 @@ export function ImageViewer({ listingsById }: ImageViewerProps) {
           {listing && shown ? (
             <ViewerBody listing={listing} index={shown.index} />
           ) : (
-            <DialogTitle className="sr-only">Photos</DialogTitle>
+            <>
+              <DialogTitle className="sr-only">Photos</DialogTitle>
+              <div className="flex flex-1 items-center justify-center" aria-busy="true">
+                {card.isError ? (
+                  <span className="text-sm text-white/70">Couldn&apos;t load this listing.</span>
+                ) : (
+                  <Spinner className="size-8 text-white/80" label="Loading photos" />
+                )}
+              </div>
+            </>
           )}
         </DialogPrimitive.Content>
       </DialogPortal>
@@ -226,16 +236,16 @@ function ViewerBody({ listing, index: rawIndex }: { listing: ListingSummary; ind
   );
 }
 
-/** Full-size photo fading in over its blurred thumbnail. Keyed by path, so state resets. */
+/** Full-size photo (a `LazyImage`) fading in over its blurred thumbnail, with a spinner on top. */
 function ViewerImage({ path, alt }: { path: string; alt: string }) {
-  const [loaded, setLoaded] = useState(false);
-  const markIfComplete = useCallback((image: HTMLImageElement | null) => {
-    if (image?.complete && image.naturalWidth > 0) setLoaded(true);
-  }, []);
-
   return (
-    <>
-      {loaded ? null : (
+    <LazyImage
+      src={fullUrl(path)}
+      alt={alt}
+      loading="eager"
+      className="absolute inset-0 size-full"
+      imgClassName="object-contain"
+      placeholder={
         <img
           src={thumbUrl(path)}
           alt=""
@@ -243,19 +253,7 @@ function ViewerImage({ path, alt }: { path: string; alt: string }) {
           draggable={false}
           className="absolute inset-0 size-full scale-105 object-contain blur-xl"
         />
-      )}
-      <img
-        ref={markIfComplete}
-        src={fullUrl(path)}
-        alt={alt}
-        draggable={false}
-        decoding="async"
-        onLoad={() => setLoaded(true)}
-        className={cn(
-          "absolute inset-0 size-full object-contain transition-opacity duration-200",
-          loaded ? "opacity-100" : "opacity-0",
-        )}
-      />
-    </>
+      }
+    />
   );
 }

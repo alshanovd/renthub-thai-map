@@ -19,7 +19,9 @@ export type ViewerTarget = { listingId: string; index: number };
 export type MapUiState = {
   /** Updated by the map on `idle` (debounced); the list only reads it. */
   bounds: Bounds | null;
-  setBounds: (bounds: Bounds | null) => void;
+  /** Map zoom at the time of `bounds` (drives the pins request's grid). */
+  zoom: number | null;
+  setBounds: (bounds: Bounds | null, zoom: number | null) => void;
   selectedId: string | null;
   /**
    * Where the current selection came from. `"pin"`/`"url"` ask the list to scroll the card into
@@ -53,7 +55,8 @@ export type MapUiState = {
 /** Single source of truth for interactive map/list UI state. */
 export const useMapUi = create<MapUiState>()((set) => ({
   bounds: null,
-  setBounds: (bounds) => set({ bounds, awaitingBounds: false }),
+  zoom: null,
+  setBounds: (bounds, zoom) => set({ bounds, zoom, awaitingBounds: false }),
   selectedId: null,
   selectSource: null,
   select: (id, source) =>

@@ -1,8 +1,9 @@
 import { AppShell } from "@/components/app-shell";
-import { getListingsPayload } from "@/lib/listings/query";
 
-/** Main screen. The payload is cached (`"use cache"`), so `/` stays prerendered. */
-export default async function Home() {
-  const payload = await getListingsPayload();
-  return <AppShell payload={payload} />;
+/**
+ * Main screen: a static shell (prerendered, no listing data in the HTML). Pins and cards are
+ * fetched from the data API on the client.
+ */
+export default function Home() {
+  return <AppShell />;
 }

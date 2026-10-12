@@ -2,54 +2,42 @@ import { describe, expect, it } from "vitest";
 
 import type { Bounds } from "@/lib/store";
 
-import type { ListingSummary } from "./types";
-import { computeTabCounts, computeVisibleItems, type VisibleInput } from "./visible";
+import type { Pin } from "./types";
+import { computeTabCounts, computeVisibleItems, pinsInView, type VisibleInput } from "./visible";
 
-function listing(id: string, overrides: Partial<ListingSummary> = {}): ListingSummary {
-  return {
-    id,
-    slug: `slug-${id}`,
-    name: `Listing ${id}`,
-    district: null,
-    subdistrict: null,
-    lat: 18.79,
-    lng: 98.98,
-    daily: { type: "AMOUNT", min: 500, max: 500 },
-    monthly: { type: "NO_MONTHLY_RENTAL", min: null, max: null },
-    cover: null,
-    pictures: [],
-    roomCount: 1,
-    refreshedAt: null,
-    deleted: false,
-    ...overrides,
-  };
+function pin(id: string, overrides: Partial<Pin> = {}): Pin {
+  return { id, lat: 18.79, lng: 98.98, price: 500, kind: "amount", ...overrides };
 }
 
 const bounds: Bounds = { north: 18.8, south: 18.78, east: 99, west: 98.97 };
-const inside = listing("in");
-const outside = listing("out", { lat: 18.9 });
-const noLoc = listing("noloc", { lat: null, lng: null });
-const filteredOut = listing("expensive", { lat: 18.95 });
-const all = [inside, outside, noLoc, filteredOut];
-const filtered = [inside, outside, noLoc];
+// Server order (e.g. price ascending): cheap, outside (in the expanded bbox only), pricey.
+const cheap = pin("cheap", { price: 300 });
+const outside = pin("out", { lat: 18.9, price: 400 });
+const pricey = pin("pricey", { price: 700 });
+const call = pin("call", { price: null, kind: "call" });
+const pins = [cheap, outside, pricey, call];
 
 const base: VisibleInput = {
   tab: "map",
-  listings: all,
-  filtered,
+  pins,
   bounds,
   selectedId: null,
+  selectedPin: null,
   favoriteIds: [],
+  noLocationIds: [],
 };
 
 const ids = (input: Partial<VisibleInput>) =>
-  computeVisibleItems({ ...base, ...input }).map(
-    (v) => `${v.listing.id}${v.outsideView ? "*" : ""}`,
-  );
+  computeVisibleItems({ ...base, ...input }).map((v) => `${v.id}${v.outsideView ? "*" : ""}`);
 
 describe("computeVisibleItems: map tab", () => {
-  it("keeps filtered listings inside the bounds", () => {
-    expect(ids({})).toEqual(["in"]);
+  it("keeps only pins inside the actual bounds, in the server's order", () => {
+    expect(ids({})).toEqual(["cheap", "pricey", "call"]);
+    expect(ids({ pins: [call, pricey, cheap] })).toEqual(["call", "pricey", "cheap"]);
+  });
+
+  it("carries the pin (for the skeleton's price)", () => {
+    expect(computeVisibleItems(base)[0].pin).toBe(cheap);
   });
 
   it("is empty until the map reports its bounds", () => {
@@ -57,64 +45,77 @@ describe("computeVisibleItems: map tab", () => {
   });
 
   it("doesn't duplicate a selected listing that's already in view", () => {
-    expect(ids({ selectedId: "in" })).toEqual(["in"]);
+    expect(ids({ selectedId: "pricey" })).toEqual(["cheap", "pricey", "call"]);
   });
 
-  it("prepends the selected listing when it's outside the bounds", () => {
-    expect(ids({ selectedId: "out" })).toEqual(["out*", "in"]);
+  it("prepends a selected pin that's loaded but outside the view", () => {
+    expect(ids({ selectedId: "out" })).toEqual(["out*", "cheap", "pricey", "call"]);
   });
 
-  it("keeps the selection even when the search filters it out", () => {
-    expect(ids({ selectedId: "expensive" })).toEqual(["expensive*", "in"]);
+  it("keeps the selection from its card when the search filters it out", () => {
+    const expensive = pin("expensive", { lat: 18.95, price: 5000 });
+    expect(ids({ selectedId: "expensive", selectedPin: expensive })).toEqual([
+      "expensive*",
+      "cheap",
+      "pricey",
+      "call",
+    ]);
   });
 
   it("keeps the selection before the bounds are known", () => {
     expect(ids({ bounds: null, selectedId: "out" })).toEqual(["out*"]);
   });
 
-  it("shows nothing extra for a selection without coordinates or an unknown id", () => {
-    expect(ids({ selectedId: "noloc" })).toEqual(["in"]);
-    expect(ids({ selectedId: "missing" })).toEqual(["in"]);
+  it("shows nothing extra while the selection's location is unknown", () => {
+    expect(ids({ selectedId: "missing" })).toEqual(["cheap", "pricey", "call"]);
+    // A stale selectedPin of another listing is ignored.
+    expect(ids({ selectedId: "missing", selectedPin: pin("other") })).toEqual([
+      "cheap",
+      "pricey",
+      "call",
+    ]);
   });
 });
 
 describe("computeVisibleItems: favorites tab", () => {
-  const gone = listing("gone", { deleted: true });
-
   it("is empty without favorites", () => {
     expect(ids({ tab: "favorites" })).toEqual([]);
   });
 
-  it("ignores the search and bounds, keeps favorite order, includes no-location", () => {
+  it("ignores the search, bounds and selection; keeps favorite order once per id", () => {
     expect(
-      ids({ tab: "favorites", favoriteIds: ["expensive", "noloc", "out"], selectedId: "in" }),
-    ).toEqual(["expensive", "noloc", "out"]);
-  });
-
-  it("unions the payload with fetched (soft-deleted) listings and skips unknown ids", () => {
-    expect(
-      ids({
-        tab: "favorites",
-        favoriteIds: ["gone", "unknown", "in", "in"],
-        extraListings: [gone],
-      }),
-    ).toEqual(["gone", "in"]);
+      ids({ tab: "favorites", favoriteIds: ["gone", "noloc", "out", "noloc"], selectedId: "x" }),
+    ).toEqual(["gone", "noloc", "out"]);
   });
 });
 
 describe("computeVisibleItems: no-location tab", () => {
-  it("lists filtered listings without coordinates, ignoring bounds and selection", () => {
-    expect(ids({ tab: "nolocation", bounds: null, selectedId: "out" })).toEqual(["noloc"]);
+  it("lists the loaded no-location ids, ignoring bounds and selection", () => {
+    expect(
+      ids({ tab: "nolocation", bounds: null, selectedId: "out", noLocationIds: ["a", "b"] }),
+    ).toEqual(["a", "b"]);
+  });
+});
+
+describe("pinsInView", () => {
+  it("filters by the unexpanded bounds and keeps order", () => {
+    expect(pinsInView(pins, bounds).map((p) => p.id)).toEqual(["cheap", "pricey", "call"]);
+    expect(pinsInView(pins, null)).toEqual([]);
   });
 });
 
 describe("computeTabCounts", () => {
-  it("counts listings in view, resolvable favorites and no-location listings", () => {
-    expect(computeTabCounts({ ...base, favoriteIds: ["out", "unknown"] })).toEqual({
-      map: 1,
-      favorites: 1,
-      nolocation: 1,
-    });
-    expect(computeTabCounts({ ...base, bounds: null }).map).toBe(0);
+  it("counts pins in view, favorite ids and the no-location total", () => {
+    expect(
+      computeTabCounts({
+        pins,
+        bounds,
+        favoriteIds: ["out", "unknown", "out"],
+        noLocationTotal: 4,
+      }),
+    ).toEqual({ map: 3, favorites: 2, nolocation: 4 });
+    expect(
+      computeTabCounts({ pins, bounds: null, favoriteIds: [], noLocationTotal: null }),
+    ).toEqual({ map: 0, favorites: 0, nolocation: 0 });
   });
 });

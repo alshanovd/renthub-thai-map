@@ -3,13 +3,10 @@
 import { AdvancedMarker } from "@vis.gl/react-google-maps";
 import { memo, useCallback, useMemo } from "react";
 
-import { modePrice } from "@/lib/listings/filter";
-import { formatPinLabel } from "@/lib/listings/format";
-import type { ListingSummary, PriceMode } from "@/lib/listings/types";
+import { formatPinPrice } from "@/lib/listings/format";
+import type { Pin, PriceMode } from "@/lib/listings/types";
 import { useMapUi } from "@/lib/store";
 import { cn } from "@/lib/utils";
-
-export type PinListing = ListingSummary & { lat: number; lng: number };
 
 export type MarkerRefSetter = (
   marker: google.maps.marker.AdvancedMarkerElement | null,
@@ -17,7 +14,7 @@ export type MarkerRefSetter = (
 ) => void;
 
 type PricePinProps = {
-  listing: PinListing;
+  pin: Pin;
   mode: PriceMode;
   favorite: boolean;
   selected: boolean;
@@ -28,16 +25,13 @@ type PricePinProps = {
 const SELECTED_Z = 1_000_000;
 const HIGHLIGHTED_Z = 100_000;
 
-function PricePinImpl({ listing, mode, favorite, selected, setMarkerRef }: PricePinProps) {
-  const { id } = listing;
+function PricePinImpl({ pin, mode, favorite, selected, setMarkerRef }: PricePinProps) {
+  const { id } = pin;
   const highlighted = useMapUi((s) => s.hoveredId === id && s.hoverSource === "card");
   const hover = useMapUi((s) => s.hover);
   const select = useMapUi((s) => s.select);
 
-  const position = useMemo(
-    () => ({ lat: listing.lat, lng: listing.lng }),
-    [listing.lat, listing.lng],
-  );
+  const position = useMemo(() => ({ lat: pin.lat, lng: pin.lng }), [pin.lat, pin.lng]);
   const ref = useCallback(
     (marker: google.maps.marker.AdvancedMarkerElement | null) => setMarkerRef?.(marker, id),
     [setMarkerRef, id],
@@ -49,14 +43,14 @@ function PricePinImpl({ listing, mode, favorite, selected, setMarkerRef }: Price
   }, [hover, id]);
   const onClick = useCallback(() => select(id, "pin"), [select, id]);
 
-  const label = formatPinLabel(modePrice(listing, mode), mode);
-  const greyed = favorite && listing.deleted;
+  const label = formatPinPrice(pin.price, pin.kind, mode);
+  const greyed = favorite && pin.deleted === true;
 
   return (
     <AdvancedMarker
       ref={ref}
       position={position}
-      title={listing.name}
+      title={label}
       zIndex={selected ? SELECTED_Z : highlighted ? HIGHLIGHTED_Z : undefined}
       onClick={onClick}
       onMouseEnter={onMouseEnter}

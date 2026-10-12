@@ -3,6 +3,7 @@
 import { ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
 import { type MouseEvent, useCallback, useState } from "react";
 
+import { LazyImage } from "@/components/ui-ext/lazy-image";
 import { thumbUrl } from "@/lib/images";
 import { useMapUi } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -18,7 +19,7 @@ const arrowClass =
 
 /**
  * 4:3 thumbnail carousel. Only the current photo and its neighbours are mounted (the next one
- * preloads while it's off to the side); all use `loading="lazy"`. Clicking the photo opens the
+ * preloads while it's off to the side); all are `LazyImage`s (spinner until loaded). Clicking the photo opens the
  * fullscreen viewer. Clicks never reach the card (no selection).
  */
 export function PhotoCarousel({ listingId, pictures }: PhotoCarouselProps) {
@@ -64,15 +65,12 @@ export function PhotoCarousel({ listingId, pictures }: PhotoCarouselProps) {
         onClick={() => openViewer(listingId, index)}
       >
         {[...mounted].map(([i, offset]) => (
-          <img
+          <LazyImage
             key={i}
             src={thumbUrl(pictures[i])}
             alt=""
-            loading="lazy"
-            decoding="async"
-            draggable={false}
             aria-hidden={offset !== 0}
-            className="absolute inset-0 size-full object-cover"
+            className="absolute inset-0 size-full"
             style={{ transform: `translateX(${String(offset * 100)}%)` }}
           />
         ))}

@@ -28,20 +28,34 @@ export type ListingSummary = {
   deleted: boolean;
 };
 
-export type ListingsPayload = {
-  listings: ListingSummary[];
-  /** ISO `finished_at` of the latest successful, non-partial scrape run. */
-  lastScrapeAt: string | null;
-};
-
 /** Card data served by `/api/listings?ids=` (same shape as `ListingSummary`). */
 export type ListingCard = ListingSummary;
 
 /** Price kind of a pin: 0 = `AMOUNT`, 1 = `CALL`. */
 export type PinKind = 0 | 1;
 
-/** `[id, lat, lng, priceMin | null, kind]`; `priceMin` is the active mode's min (null for CALL). */
-export type Pin = [id: string, lat: number, lng: number, priceMin: number | null, kind: PinKind];
+/**
+ * A pin on the wire: `[id, lat, lng, priceMin | null, kind]`; `priceMin` is the active mode's min
+ * (null for CALL). Decoded into `Pin` once, by `fetchPins`.
+ */
+export type PinTuple = [
+  id: string,
+  lat: number,
+  lng: number,
+  priceMin: number | null,
+  kind: PinKind,
+];
+
+/** A decoded map pin. `price` is the active mode's minimum (null for call-for-price). */
+export type Pin = {
+  id: string;
+  lat: number;
+  lng: number;
+  price: number | null;
+  kind: "amount" | "call";
+  /** Set on favorite pins built from a soft-deleted card (drawn greyed out). */
+  deleted?: boolean;
+};
 
 /** `GET /api/pins?bbox=…&mode=&max=&call=&sort=` */
 export type PinsResponse = {
@@ -52,8 +66,11 @@ export type PinsResponse = {
   /** Filtered listings without coordinates: the No location tab count. */
   noLocationTotal: number;
   /** Filtered pins inside the bbox, in the requested sort order. */
-  pins: Pin[];
+  pins: PinTuple[];
 };
+
+/** `PinsResponse` with its pins decoded (what the client works with). */
+export type PinsData = Omit<PinsResponse, "pins"> & { pins: Pin[] };
 
 /** `GET /api/listings?ids=…` (unknown ids are omitted; soft-deleted ones included). */
 export type ListingCardsResponse = { listings: ListingCard[] };

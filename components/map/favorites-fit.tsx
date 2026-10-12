@@ -6,7 +6,7 @@ import { useEffect, useEffectEvent, useRef } from "react";
 import { centerAboveInset, usableInset } from "@/lib/map-inset";
 import { useMapUi } from "@/lib/store";
 
-import type { PinListing } from "./price-pin";
+import type { Pin } from "@/lib/listings/types";
 
 const FIT_PADDING = 64;
 const SINGLE_ZOOM = 15;
@@ -16,15 +16,18 @@ const MAX_FIT_ZOOM = 16;
 const MIN_VISIBLE_PX = 120;
 
 /**
- * Fits the map to the favorite pins once, when the Favorites tab is activated. Later changes
- * (toggling a favorite, a fetched soft-deleted favorite arriving) never move the camera.
+ * Fits the map to the favorite pins once per activation of the Favorites tab, as soon as the
+ * favorites' card data is loaded (`ready`; immediately when it's cached). Later changes
+ * (toggling a favorite, a refetch) never move the camera.
  * One favorite: pan to it at zoom 15. Several: fit them (zoom at most 16). None: no move.
  * On mobile the bottom padding grows by the list sheet's height (`mapInsetBottom`).
  */
-export function FavoritesFit({ pins }: { pins: readonly PinListing[] }) {
+export function FavoritesFit({ pins, ready }: { pins: readonly Pin[]; ready: boolean }) {
   const map = useMap();
   const activeTab = useMapUi((s) => s.activeTab);
   const previousTab = useRef(activeTab);
+  /** Set on activation, cleared by the fit (or by leaving the tab before the data arrived). */
+  const pendingFit = useRef(false);
 
   const fit = useEffectEvent((target: google.maps.Map) => {
     if (pins.length === 0) return;
@@ -54,9 +57,15 @@ export function FavoritesFit({ pins }: { pins: readonly PinListing[] }) {
   useEffect(() => {
     const previous = previousTab.current;
     previousTab.current = activeTab;
-    if (!map || activeTab !== "favorites" || previous === "favorites") return;
+    if (activeTab !== "favorites") pendingFit.current = false;
+    else if (previous !== "favorites") pendingFit.current = true;
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (!map || !ready || !pendingFit.current || activeTab !== "favorites") return;
+    pendingFit.current = false;
     fit(map);
-  }, [map, activeTab]);
+  }, [map, ready, activeTab]);
 
   return null;
 }

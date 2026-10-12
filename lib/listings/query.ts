@@ -1,11 +1,10 @@
-import { and, asc, eq, isNull, max, sql } from "drizzle-orm";
-import { cacheLife, cacheTag } from "next/cache";
+import { and, eq, max, sql } from "drizzle-orm";
 
-import { type Db, getDb, schema } from "@/lib/db/client";
+import { type Db, schema } from "@/lib/db/client";
 
-import type { ListingSummary, ListingsPayload } from "./types";
+import type { ListingSummary } from "./types";
 
-/** Cache tag of the listings payload; `/api/revalidate` invalidates it after a scrape. */
+/** Cache tag of the data API's cached queries; `/api/revalidate` invalidates it after a scrape. */
 export const LISTINGS_TAG = "listings";
 
 const { listings, scrapeRuns } = schema;
@@ -86,29 +85,6 @@ export function toListingSummary(row: SummaryRow): ListingSummary {
     refreshedAt: toIso(row.renthubRefreshedAt),
     deleted: row.deletedAt !== null,
   };
-}
-
-/**
- * Every active (non-deleted) listing plus the time of the last successful full scrape.
- * Cached (`"use cache"`, tag `listings`, `days` profile: revalidates in the background after
- * 24 h) and invalidated on demand by `POST /api/revalidate` after each scrape.
- */
-export async function getListingsPayload(): Promise<ListingsPayload> {
-  "use cache";
-  cacheTag(LISTINGS_TAG);
-  cacheLife("days");
-
-  const db = getDb();
-  const [rows, lastScrapeAt] = await Promise.all([
-    db
-      .select(summaryColumns)
-      .from(listings)
-      .where(isNull(listings.deletedAt))
-      .orderBy(asc(listings.id)),
-    queryLastScrapeAt(db),
-  ]);
-
-  return { listings: rows.map(toListingSummary), lastScrapeAt };
 }
 
 /** ISO `finished_at` of the latest successful, non-partial scrape run (uncached). */

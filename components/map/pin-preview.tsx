@@ -4,13 +4,14 @@ import { AdvancedMarker } from "@vis.gl/react-google-maps";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { type MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 
+import { LazyImage } from "@/components/ui-ext/lazy-image";
+import { Spinner } from "@/components/ui-ext/spinner";
 import { thumbUrl } from "@/lib/images";
-import { formatPriceFull } from "@/lib/listings/format";
-import type { PriceMode } from "@/lib/listings/types";
+import { formatPinPrice, formatPriceFull } from "@/lib/listings/format";
+import type { ListingCard, Pin, PriceMode } from "@/lib/listings/types";
+import { useCard } from "@/lib/queries";
 import { type MapUiState, useMapUi } from "@/lib/store";
 import { cn } from "@/lib/utils";
-
-import type { PinListing } from "./price-pin";
 
 const HIDE_DELAY_MS = 100;
 const PREVIEW_Z = 2_000_000;
@@ -18,13 +19,14 @@ const PREVIEW_Z = 2_000_000;
 const pinHoverId = (state: MapUiState) => (state.hoverSource === "pin" ? state.hoveredId : null);
 
 type PinPreviewProps = {
-  /** Listings that currently have a pin, by id. */
-  pinsById: ReadonlyMap<string, PinListing>;
+  /** Pins currently drawn, by id. */
+  pinsById: ReadonlyMap<string, Pin>;
   mode: PriceMode;
 };
 
 /**
- * Thumbnail popover above a hovered pin. Hiding is delayed by 100 ms and cancelled while the
+ * Thumbnail popover above a hovered pin. The card data is fetched on hover (`useCard`); until it
+ * arrives the same frame shows a photo loader and the pin's price (no name). Hiding is delayed by 100 ms and cancelled while the
  * pointer is over the popover, so moving from the pin to the popover doesn't flicker.
  */
 export function PinPreview({ pinsById, mode }: PinPreviewProps) {
@@ -80,12 +82,13 @@ export function PinPreview({ pinsById, mode }: PinPreviewProps) {
     if (shownId !== null) select(shownId, "pin");
   }, [select, shownId]);
 
-  const listing = shownId === null ? undefined : pinsById.get(shownId);
-  if (!listing) return null;
+  const pin = shownId === null ? undefined : pinsById.get(shownId);
+  const { data: listing } = useCard(pin ? pin.id : null);
+  if (!pin) return null;
 
   return (
     <AdvancedMarker
-      position={{ lat: listing.lat, lng: listing.lng }}
+      position={{ lat: pin.lat, lng: pin.lng }}
       zIndex={PREVIEW_Z}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -95,16 +98,29 @@ export function PinPreview({ pinsById, mode }: PinPreviewProps) {
       anchorTop={shownId === selectedId ? "calc(-100% - 38px)" : "calc(-100% - 32px)"}
     >
       <div className="w-[200px] overflow-hidden rounded-lg bg-white text-neutral-900 shadow-xl ring-1 ring-black/10">
-        <PreviewPhotos key={listing.id} listing={listing} onNavPress={setNavPress} />
-        <div className="flex flex-col gap-0.5 p-2 text-xs">
-          <div className="line-clamp-2 text-sm leading-tight font-medium">{listing.name}</div>
-          <div className={cn(mode === "day" ? "font-semibold" : "text-neutral-500")}>
-            {formatPriceFull(listing.daily, "day")}
+        {listing ? (
+          <>
+            <PreviewPhotos key={listing.id} listing={listing} onNavPress={setNavPress} />
+            <div className="flex flex-col gap-0.5 p-2 text-xs">
+              <div className="line-clamp-2 text-sm leading-tight font-medium">{listing.name}</div>
+              <div className={cn(mode === "day" ? "font-semibold" : "text-neutral-500")}>
+                {formatPriceFull(listing.daily, "day")}
+              </div>
+              <div className={cn(mode === "month" ? "font-semibold" : "text-neutral-500")}>
+                {formatPriceFull(listing.monthly, "month")}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div aria-busy="true">
+            <div className="flex h-[150px] w-[200px] items-center justify-center bg-neutral-100">
+              <Spinner className="size-5 text-neutral-500" label="Loading listing" />
+            </div>
+            <div className="p-2 text-sm font-semibold">
+              {formatPinPrice(pin.price, pin.kind, mode)}
+            </div>
           </div>
-          <div className={cn(mode === "month" ? "font-semibold" : "text-neutral-500")}>
-            {formatPriceFull(listing.monthly, "month")}
-          </div>
-        </div>
+        )}
       </div>
     </AdvancedMarker>
   );
@@ -114,7 +130,7 @@ const arrowClass =
   "absolute top-1/2 z-10 flex size-6 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutral-900 shadow ring-1 ring-black/10 hover:bg-white";
 
 type PreviewPhotosProps = {
-  listing: PinListing;
+  listing: ListingCard;
   /** Called with `true` when a press starts on an arrow, `false` for any other press. */
   onNavPress: (pressed: boolean) => void;
 };
@@ -159,17 +175,15 @@ function PreviewPhotos({ listing, onNavPress }: PreviewPhotosProps) {
       onPointerDownCapture={() => onNavPress(false)}
     >
       {[...mounted].map(([i, offset]) => (
-        <img
+        <LazyImage
           key={i}
           src={thumbUrl(pictures[i])}
           alt=""
-          loading="lazy"
-          decoding="async"
-          draggable={false}
           width={200}
           height={150}
           aria-hidden={offset !== 0}
-          className="absolute inset-0 size-full object-cover"
+          className="absolute inset-0 size-full"
+          placeholder={<div className="absolute inset-0 bg-neutral-100" />}
           style={{ transform: `translateX(${String(offset * 100)}%)` }}
         />
       ))}

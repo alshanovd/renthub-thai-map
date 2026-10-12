@@ -1,6 +1,6 @@
 import type { Bounds } from "@/lib/store";
 
-import type { ListingSummary, PriceMode, PriceRange } from "./types";
+import type { ListingSummary, Pin, PriceMode, PriceRange } from "./types";
 
 export type SortOrder = "price-asc" | "price-desc" | "updated";
 
@@ -86,4 +86,21 @@ export function hasLocation(
   listing: ListingSummary,
 ): listing is ListingSummary & { lat: number; lng: number } {
   return listing.lat !== null && listing.lng !== null;
+}
+
+/**
+ * A map pin built from card data (favorites, a selection outside the loaded pins), priced like
+ * the server's pins: the active mode's minimum, `call` for call-for-price. Null without location.
+ */
+export function pinFromCard(listing: ListingSummary, mode: PriceMode): Pin | null {
+  if (!hasLocation(listing)) return null;
+  const range = modePrice(listing, mode);
+  return {
+    id: listing.id,
+    lat: listing.lat,
+    lng: listing.lng,
+    price: minAmount(range),
+    kind: range.type === "CALL" ? "call" : "amount",
+    ...(listing.deleted ? { deleted: true } : {}),
+  };
 }

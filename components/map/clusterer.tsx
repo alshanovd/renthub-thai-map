@@ -8,9 +8,9 @@ import {
 import { useMap } from "@vis.gl/react-google-maps";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { PriceMode } from "@/lib/listings/types";
+import type { Pin, PriceMode } from "@/lib/listings/types";
 
-import { type PinListing, PricePin } from "./price-pin";
+import { PricePin } from "./price-pin";
 
 type Markers = Record<string, google.maps.marker.AdvancedMarkerElement>;
 
@@ -48,7 +48,7 @@ const renderer: Renderer = {
 };
 
 type ClusteredPinsProps = {
-  pins: readonly PinListing[];
+  pins: readonly Pin[];
   mode: PriceMode;
   favoriteIds: ReadonlySet<string>;
   selectedId: string | null;
@@ -105,7 +105,7 @@ export function ClusteredPins({ pins, mode, favoriteIds, selectedId }: Clustered
         pin.id === selectedId ? null : (
           <PricePin
             key={pin.id}
-            listing={pin}
+            pin={pin}
             mode={mode}
             favorite={favoriteIds.has(pin.id)}
             selected={false}
@@ -116,7 +116,7 @@ export function ClusteredPins({ pins, mode, favoriteIds, selectedId }: Clustered
       {selected ? (
         <PricePin
           key={`selected-${selected.id}`}
-          listing={selected}
+          pin={selected}
           mode={mode}
           favorite={favoriteIds.has(selected.id)}
           selected

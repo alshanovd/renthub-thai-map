@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   compactNumber,
   formatPinLabel,
+  formatPinPrice,
   formatPrice,
   formatPriceFull,
   relativeTime,
@@ -74,6 +75,34 @@ describe("formatPinLabel", () => {
     expect(formatPinLabel(amount(7500, 12_000), "month")).toBe("฿7.5k");
     expect(formatPinLabel(call, "day")).toBe("Call");
     expect(formatPinLabel(noDaily, "day")).toBe("—");
+  });
+});
+
+describe("formatPinPrice", () => {
+  it("matches formatPinLabel for the same price", () => {
+    const cases: [PriceRange, number | null, "amount" | "call"][] = [
+      [amount(500, 700), 500, "amount"],
+      [amount(950, null), 950, "amount"],
+      [amount(1200, 1200), 1200, "amount"],
+      [amount(7500, 12_000), 7500, "amount"],
+      [amount(15_000, null), 15_000, "amount"],
+      [amount(12_345, null), 12_345, "amount"],
+      [amount(null, null), null, "amount"],
+      [call, null, "call"],
+      [noDaily, null, "amount"],
+    ];
+    for (const mode of ["day", "month"] as const) {
+      for (const [range, price, kind] of cases) {
+        expect(formatPinPrice(price, kind, mode)).toBe(formatPinLabel(range, mode));
+      }
+    }
+  });
+
+  it("formats the pin labels", () => {
+    expect(formatPinPrice(500, "amount", "day")).toBe("฿500");
+    expect(formatPinPrice(1500, "amount", "day")).toBe("฿1,500");
+    expect(formatPinPrice(7500, "amount", "month")).toBe("฿7.5k");
+    expect(formatPinPrice(null, "call", "month")).toBe("Call");
   });
 });
 
