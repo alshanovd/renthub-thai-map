@@ -48,6 +48,46 @@ listings that disappeared. When `REVALIDATE_URL` is set it then calls
 The site serves the new data on the next request; "Updated …" in the top bar shows the time of
 the last successful full scrape.
 
+## Architecture: data loading
+
+The browser holds only what the current view needs. `/` is a static shell with no listing data;
+everything arrives from the app's own JSON API.
+
+**Endpoints** (search params: `mode=day|month`, `max`, `call=0|1`, `sort=price-asc|price-desc|updated`):
+
+| Endpoint                                         | Returns                                                                                                                                                                   |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/pins?…&bbox=south,west,north,east`     | Compact pins (`[id, lat, lng, price, kind]` tuples) for active listings with a location inside the box, in sort order, plus `total`, `noLocationTotal` and `lastScrapeAt` |
+| `GET /api/listings?ids=a,b,…` (max 100)          | Card data for those ids (unknown ids omitted, soft-deleted ones flagged `deleted`)                                                                                        |
+| `GET /api/listings/no-location?…&cursor=&limit=` | One page of filtered listings without coordinates, and `nextCursor`                                                                                                       |
+| `POST /api/revalidate` (secret)                  | Invalidates the server cache after a scrape                                                                                                                               |
+
+**Caching and revalidation.** The queries are `"use cache"` functions tagged `listings`
+(`cacheLife("days")`); the scraper's `POST /api/revalidate` expires the tag. API responses send
+`Cache-Control: public, max-age=0, s-maxage=60, stale-while-revalidate=300`, so after a scrape the
+CDN may serve old data for a few minutes at most.
+
+**Client.** TanStack Query holds the data:
+
+- The map's visible bounds are expanded by 25% per side and snapped outwards to a zoom-dependent
+  grid, so small pans reuse the same `/api/pins` request; superseded requests are aborted.
+- Cards are cached per id (`["card", id]`). A batching loader turns all ids requested within
+  ~16 ms into one `/api/listings?ids=` call. Unused cards are evicted after 60 s.
+- The list is virtualized (`@tanstack/react-virtual`, rows of the 2-column grid): only the cards
+  near the visible part are mounted, each with a single photo; carousel neighbours preload on
+  arrow hover/focus. The viewer mounts one full image and preloads its neighbours.
+- Pins are drawn by one imperative layer (`components/map/pin-layer.tsx`): plain-DOM pills inside
+  `AdvancedMarkerElement`s, diffed by id, clustered by `@googlemaps/markerclusterer`
+  (radius 80 px, no clustering above zoom 14). Only the hover preview is a React marker.
+- Map tiles are raster by default (`NEXT_PUBLIC_MAP_RENDERING=vector` opts into vector tiles,
+  which measured about 85 MB more browser memory).
+
+**Measuring memory.** `pnpm perf:measure [--url http://localhost:3000] [--runs 3] [--json out.json]`
+drives the installed Google Chrome through a fixed scenario (pan and zoom the map, scroll the
+list, hover pins, step carousels, open the viewer) and prints JS heap, DOM, image, transfer and
+browser-process RSS figures. Measure `pnpm build && pnpm start` or the live site, never
+`pnpm dev`.
+
 ## Environment variables
 
 | Name                              | Where                                   | Purpose                                                                                       |
@@ -56,6 +96,7 @@ the last successful full scrape.
 | `DATABASE_URL_UNPOOLED`           | same                                    | Direct connection for `drizzle-kit` migrations                                                |
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Vercel, `.env.local`                    | Maps JavaScript API key, restricted to this site's referrers and `localhost:3000`             |
 | `NEXT_PUBLIC_GOOGLE_MAP_ID`       | Vercel, `.env.local`                    | Map ID for Advanced Markers (`DEMO_MAP_ID` by default)                                        |
+| `NEXT_PUBLIC_MAP_RENDERING`       | optional                                | Map tiles: unset/`raster` (default, lighter) or `vector`                                      |
 | `REVALIDATE_SECRET`               | Vercel, `.env.local`                    | Shared secret for `/api/revalidate`                                                           |
 | `REVALIDATE_URL`                  | `.env.local` only                       | `https://renthub-thai-map.vercel.app/api/revalidate`; the scraper skips revalidation if empty |
 
