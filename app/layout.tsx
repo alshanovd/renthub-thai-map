@@ -20,6 +20,7 @@ const DESCRIPTION =
   "Every Chiang Mai daily and monthly rental from renthub.in.th on one map, with photos, prices, filters and favorites.";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://renthub-thai-map.vercel.app"),
   title: TITLE,
   description: DESCRIPTION,
   applicationName: "Renthub Map",
