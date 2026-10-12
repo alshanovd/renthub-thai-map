@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "tabWidth": 2,
+  "useTabs": false,
+  "singleQuote": false,
+  "jsxSingleQuote": false,
+  "trailingComma": "all",
+  "semi": true,
+  "printWidth": 100,
+  "sortTailwindcss": {
+    "stylesheet": "./app/globals.css",
+    "functions": ["cn", "cva"]
+  },
+  "ignorePatterns": [
+    "drizzle/**",
+    ".next/**",
+    "scripts/scrape/__fixtures__/**",
+    "pnpm-lock.yaml",
+    "next-env.d.ts"
+  ]
+}
