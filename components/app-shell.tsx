@@ -8,24 +8,25 @@ import { ListPanel } from "@/components/list/list-panel";
 import { SearchUrlSync } from "@/components/search-url-sync";
 import { SelectionUrlSync } from "@/components/selection-url-sync";
 import { TopBar } from "@/components/top-bar/top-bar";
+import { ImageViewer } from "@/components/viewer/image-viewer";
+import { useFavoriteExtras, useFavorites } from "@/lib/favorites";
 import { applySearch, hasLocation } from "@/lib/listings/filter";
-import type { ListingsPayload } from "@/lib/listings/types";
+import type { ListingSummary, ListingsPayload } from "@/lib/listings/types";
 import { useAppliedSearch } from "@/lib/search-params";
 import { type ListTab, useMapUi } from "@/lib/store";
 
-/** Favorites arrive in plan 10; until then nobody has any. */
-const NO_FAVORITES: ReadonlySet<string> = new Set();
-const NO_FAVORITE_IDS: readonly string[] = [];
-
-/** Which pins the map draws for the active list tab. */
+/**
+ * Which pins the map draws for the active list tab: none on "No location", only the favorites
+ * with coordinates on "Favorites", otherwise the filtered pins plus the selected one.
+ */
 function pinsForTab(
   tab: ListTab,
   filtered: readonly PinListing[],
   selected: PinListing | undefined,
+  favoritePins: readonly PinListing[],
 ): readonly PinListing[] {
   if (tab === "nolocation") return [];
-  // Favorites tab is wired in plan 10.
-  if (tab === "favorites") return [];
+  if (tab === "favorites") return favoritePins;
   if (!selected || filtered.some((pin) => pin.id === selected.id)) return filtered;
   return [...filtered, selected];
 }
@@ -35,6 +36,24 @@ export function AppShell({ payload }: { payload: ListingsPayload }) {
   const activeTab = useMapUi((s) => s.activeTab);
   const selectedId = useMapUi((s) => s.selectedId);
   const [search] = useAppliedSearch();
+  const favorites = useFavorites();
+  const extraListings = useFavoriteExtras(favorites.ids, payload.listings);
+
+  /** Payload plus fetched favorites (for the viewer and the favorite pins). */
+  const listingsById = useMemo(() => {
+    const byId = new Map<string, ListingSummary>();
+    for (const listing of extraListings) byId.set(listing.id, listing);
+    for (const listing of payload.listings) byId.set(listing.id, listing);
+    return byId;
+  }, [payload.listings, extraListings]);
+  const favoritePins = useMemo(
+    () =>
+      favorites.ids.flatMap((id) => {
+        const listing = listingsById.get(id);
+        return listing && hasLocation(listing) ? [listing] : [];
+      }),
+    [favorites.ids, listingsById],
+  );
 
   const filtered = useMemo(() => applySearch(payload.listings, search), [payload.listings, search]);
   const filteredPins = useMemo(() => filtered.filter(hasLocation), [filtered]);
@@ -43,8 +62,8 @@ export function AppShell({ payload }: { payload: ListingsPayload }) {
     return listing && hasLocation(listing) ? listing : undefined;
   }, [payload.listings, selectedId]);
   const pins = useMemo(
-    () => pinsForTab(activeTab, filteredPins, selected),
-    [activeTab, filteredPins, selected],
+    () => pinsForTab(activeTab, filteredPins, selected, favoritePins),
+    [activeTab, filteredPins, selected, favoritePins],
   );
 
   return (
@@ -61,13 +80,16 @@ export function AppShell({ payload }: { payload: ListingsPayload }) {
             listings={payload.listings}
             filtered={filtered}
             mode={search.mode}
-            favoriteIds={NO_FAVORITE_IDS}
+            favoriteIds={favorites.ids}
+            extraListings={extraListings}
+            onToggleFavorite={favorites.toggle}
           />
         </aside>
         <main className="relative min-w-0 flex-1">
-          <ListingsMap pins={pins} mode={search.mode} favoriteIds={NO_FAVORITES} />
+          <ListingsMap pins={pins} mode={search.mode} favoriteIds={favorites.idSet} />
         </main>
       </div>
+      <ImageViewer listingsById={listingsById} />
     </div>
   );
 }

@@ -59,6 +59,7 @@ export function PhotoCarousel({ listingId, pictures }: PhotoCarouselProps) {
       <button
         type="button"
         className="absolute inset-0 block size-full cursor-zoom-in"
+        data-viewer-opener={listingId}
         aria-label={`Open photo ${String(index + 1)} of ${String(count)}`}
         onClick={() => openViewer(listingId, index)}
       >

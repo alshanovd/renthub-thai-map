@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { hasLocation } from "@/lib/listings/filter";
 import type { ListingSummary, PriceMode } from "@/lib/listings/types";
 import { computeTabCounts, computeVisibleItems, type VisibleItem } from "@/lib/listings/visible";
 import { type ListTab, useMapUi } from "@/lib/store";
@@ -16,9 +17,9 @@ type ListPanelProps = {
   /** The payload after the applied search. */
   filtered: readonly ListingSummary[];
   mode: PriceMode;
-  /** Favorite ids in display order (plan 10). */
+  /** Favorite ids in display order (newest added first). */
   favoriteIds: readonly string[];
-  /** Favorites missing from the payload, fetched from `/api/listings/by-ids` (plan 10). */
+  /** Favorites missing from the payload, fetched from `/api/listings/by-ids`. */
   extraListings?: readonly ListingSummary[];
   onToggleFavorite?: (id: string) => void;
 };
@@ -104,6 +105,7 @@ export function ListPanel({
           {tab.value === activeTab ? (
             <CardGrid
               items={items}
+              markNoLocation={tab.value === "favorites"}
               mode={mode}
               favoriteSet={favoriteSet}
               onToggleFavorite={onToggleFavorite}
@@ -118,12 +120,15 @@ export function ListPanel({
 
 function CardGrid({
   items,
+  markNoLocation,
   mode,
   favoriteSet,
   onToggleFavorite,
   empty,
 }: {
   items: readonly VisibleItem[];
+  /** Chip "No location" on cards without coordinates (Favorites tab). */
+  markNoLocation: boolean;
   mode: PriceMode;
   favoriteSet: ReadonlySet<string>;
   onToggleFavorite?: (id: string) => void;
@@ -141,6 +146,7 @@ function CardGrid({
           mode={mode}
           outsideView={outsideView}
           favorite={favoriteSet.has(listing.id)}
+          noLocation={markNoLocation && !hasLocation(listing)}
           onToggleFavorite={onToggleFavorite}
         />
       ))}

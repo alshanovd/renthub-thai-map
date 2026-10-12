@@ -7,6 +7,7 @@ import type { PriceMode } from "@/lib/listings/types";
 import { useMapUi } from "@/lib/store";
 
 import { ClusteredPins } from "./clusterer";
+import { FavoritesFit } from "./favorites-fit";
 import { PinPreview } from "./pin-preview";
 import type { PinListing } from "./price-pin";
 import { SelectionPan } from "./selection-pan";
@@ -20,7 +21,7 @@ const DEFAULT_ZOOM = 13;
 const BOUNDS_DEBOUNCE_MS = 150;
 
 type ListingsMapProps = {
-  /** Listings to draw (all have coordinates). */
+  /** Listings to draw (all have coordinates). On the Favorites tab: the favorite pins. */
   pins: readonly PinListing[];
   mode: PriceMode;
   favoriteIds: ReadonlySet<string>;
@@ -79,6 +80,7 @@ export function ListingsMap({ pins, mode, favoriteIds }: ListingsMapProps) {
         <ClusteredPins pins={pins} mode={mode} favoriteIds={favoriteIds} selectedId={selectedId} />
         <PinPreview pinsById={pinsById} mode={mode} />
         <SelectionPan pinsById={pinsById} />
+        <FavoritesFit pins={pins} />
       </GoogleMap>
     </APIProvider>
   );

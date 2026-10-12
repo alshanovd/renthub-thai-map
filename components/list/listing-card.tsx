@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart } from "lucide-react";
+import { Heart, MapPinOff } from "lucide-react";
 import { memo, type MouseEvent, useCallback } from "react";
 
 import { listingUrl } from "@/lib/images";
@@ -17,7 +17,8 @@ type ListingCardProps = {
   /** The selected listing, kept in the list although it's outside the map view. */
   outsideView: boolean;
   favorite: boolean;
-  /** Wired by plan 10 (favorites store). */
+  /** Show a "No location" chip (Favorites tab, listing without coordinates). */
+  noLocation?: boolean;
   onToggleFavorite?: (id: string) => void;
 };
 
@@ -33,6 +34,7 @@ function ListingCardImpl({
   mode,
   outsideView,
   favorite,
+  noLocation = false,
   onToggleFavorite,
 }: ListingCardProps) {
   const { id } = listing;
@@ -103,6 +105,12 @@ function ListingCardImpl({
           {listing.name}
         </button>
         {place ? <p className="truncate text-muted-foreground">{place}</p> : null}
+        {noLocation ? (
+          <span className="flex w-fit items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+            <MapPinOff className="size-3" aria-hidden />
+            No location
+          </span>
+        ) : null}
         <p className={cn(mode === "day" ? "font-semibold" : "text-muted-foreground")}>
           {formatPriceFull(listing.daily, "day")}
         </p>
