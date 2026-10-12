@@ -16,7 +16,9 @@ zod · vitest · oxlint + oxfmt · Vercel Hobby (region `sin1`).
 **Rules**
 
 - Images are hotlinked from `https://bcdn.renthub.in.th`, never stored or proxied. Use plain `<img>`, not `next/image`.
-- Never store owners' contact info (`contactInformation`).
+- Never store owners' contact info (`contactInformation`). Phones, e-mails and LINE ids that
+  owners put in free text (description, names, captions) are replaced with `[contact removed]`
+  by `redactContacts` in `scripts/scrape/map.ts`. `description` is renthub's raw HTML.
 - Schema changes only through drizzle-kit migrations in `drizzle/`.
 - Never load a whole scraped payload into context; use `jq` to extract fragments.
 - Never print or commit secrets; only `.env.example` is committed.

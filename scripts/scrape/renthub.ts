@@ -24,6 +24,8 @@ export interface Fetched {
   fromCache: boolean;
   /** The URL the data came from (data route, HTML page, or the cached entry's URL). */
   url: string;
+  /** ISO time the data was fetched from renthub (the cache entry's time for cache hits). */
+  fetchedAt?: string;
 }
 
 export interface SearchPage extends Fetched {
@@ -262,7 +264,12 @@ export function createRenthubClient(options: RenthubClientOptions = {}) {
     const cached = await cache.get<PageProps>(cacheKey, offline ? Infinity : maxAgeMs);
     if (cached) {
       stats.cacheHits++;
-      return { pageProps: cached.body, fromCache: true, url: cached.url };
+      return {
+        pageProps: cached.body,
+        fromCache: true,
+        url: cached.url,
+        fetchedAt: cached.fetchedAt,
+      };
     }
     if (offline) throw new OfflineCacheMissError(cacheKey);
 
@@ -277,13 +284,9 @@ export function createRenthubClient(options: RenthubClientOptions = {}) {
 
     const pageProps = stripContactInformation(fetched.pageProps);
     validate(pageProps, fetched.url);
-    await cache.set(cacheKey, {
-      url: fetched.url,
-      fetchedAt: new Date().toISOString(),
-      status: 200,
-      body: pageProps,
-    });
-    return { ...fetched, pageProps };
+    const fetchedAt = new Date().toISOString();
+    await cache.set(cacheKey, { url: fetched.url, fetchedAt, status: 200, body: pageProps });
+    return { ...fetched, pageProps, fetchedAt };
   }
 
   async function getSearchPage(search: Search, page: number): Promise<SearchPage> {
