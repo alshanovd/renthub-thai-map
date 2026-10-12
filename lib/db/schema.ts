@@ -10,6 +10,7 @@ import {
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 /** renthub price type: `AMOUNT` | `CALL` | `NO_DAILY_RENTAL` | other strings renthub may add. */
 export type PriceType = string;
@@ -111,6 +112,10 @@ export const listings = pgTable(
   (t) => [
     index("listings_deleted_at_idx").on(t.deletedAt),
     index("listings_daily_min_idx").on(t.dailyMin),
+    /** Bbox lookups for `/api/pins`: active listings with a location only. */
+    index("listings_active_lat_lng_idx")
+      .on(t.lat, t.lng)
+      .where(sql`${t.deletedAt} is null and ${t.lat} is not null`),
   ],
 );
 

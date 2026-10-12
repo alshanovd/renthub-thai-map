@@ -101,6 +101,7 @@ export function ListPanel({
           key={tab.value}
           value={tab.value}
           className="min-h-0 overflow-y-auto overscroll-contain"
+          data-list-scroller
         >
           {tab.value === activeTab ? (
             <CardGrid

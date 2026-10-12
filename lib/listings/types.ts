@@ -33,3 +33,30 @@ export type ListingsPayload = {
   /** ISO `finished_at` of the latest successful, non-partial scrape run. */
   lastScrapeAt: string | null;
 };
+
+/** Card data served by `/api/listings?ids=` (same shape as `ListingSummary`). */
+export type ListingCard = ListingSummary;
+
+/** Price kind of a pin: 0 = `AMOUNT`, 1 = `CALL`. */
+export type PinKind = 0 | 1;
+
+/** `[id, lat, lng, priceMin | null, kind]`; `priceMin` is the active mode's min (null for CALL). */
+export type Pin = [id: string, lat: number, lng: number, priceMin: number | null, kind: PinKind];
+
+/** `GET /api/pins?bbox=…&mode=&max=&call=&sort=` */
+export type PinsResponse = {
+  /** ISO `finished_at` of the latest successful, non-partial scrape run. */
+  lastScrapeAt: string | null;
+  /** Filtered listings with coordinates in the whole DB (not just the bbox): the "total". */
+  total: number;
+  /** Filtered listings without coordinates: the No location tab count. */
+  noLocationTotal: number;
+  /** Filtered pins inside the bbox, in the requested sort order. */
+  pins: Pin[];
+};
+
+/** `GET /api/listings?ids=…` (unknown ids are omitted; soft-deleted ones included). */
+export type ListingCardsResponse = { listings: ListingCard[] };
+
+/** `GET /api/listings/no-location?…&cursor=&limit=` */
+export type NoLocationResponse = { listings: ListingCard[]; nextCursor: string | null };

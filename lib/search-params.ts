@@ -2,18 +2,12 @@ import { createParser, createSerializer, parseAsInteger, parseAsStringLiteral } 
 import { create } from "zustand";
 
 import { DEFAULT_SEARCH, type Search, type SortOrder } from "@/lib/listings/filter";
+import { clampMax, PRICE_RANGE, SORT_ORDERS } from "@/lib/listings/search-range";
 import type { PriceMode } from "@/lib/listings/types";
 
-/** Slider range per mode. Values at `max` mean "no upper limit" (`Infinity`). */
-export const PRICE_RANGE: Record<
-  PriceMode,
-  { min: number; max: number; step: number; default: number }
-> = {
-  day: { min: 100, max: 3000, step: 50, default: 800 },
-  month: { min: 2000, max: 60_000, step: 500, default: 15_000 },
-};
+// Re-exported: the search's ranges and clamping live in a server-safe module (no nuqs).
+export { clampMax, PRICE_RANGE, SORT_ORDERS };
 
-export const SORT_ORDERS = ["price-asc", "price-desc", "updated"] as const satisfies SortOrder[];
 const MODES = ["day", "month"] as const satisfies PriceMode[];
 
 /** `call=1` / `call=0` (also accepts `true` / `false`). */
@@ -47,14 +41,6 @@ export type UrlSearch = {
   call: boolean | null;
   sort: SortOrder | null;
 };
-
-/** Clamps `max` to the mode's range; the top of the range (or above) means no limit. */
-export function clampMax(max: number, mode: PriceMode): number {
-  const range = PRICE_RANGE[mode];
-  if (Number.isNaN(max)) return range.default;
-  if (max >= range.max) return Number.POSITIVE_INFINITY;
-  return Math.max(range.min, Math.round(max));
-}
 
 /** Fills in defaults (mode-dependent `max`) and clamps `max`. */
 export function searchFromUrl(url: UrlSearch): Search {

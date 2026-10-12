@@ -1,7 +1,7 @@
-import { and, asc, eq, inArray, isNull, max, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, max, sql } from "drizzle-orm";
 import { cacheLife, cacheTag } from "next/cache";
 
-import { getDb, schema } from "@/lib/db/client";
+import { type Db, getDb, schema } from "@/lib/db/client";
 
 import type { ListingSummary, ListingsPayload } from "./types";
 
@@ -11,7 +11,7 @@ export const LISTINGS_TAG = "listings";
 const { listings, scrapeRuns } = schema;
 
 /** Columns needed for a `ListingSummary`; pictures are reduced to their paths in SQL. */
-const summaryColumns = {
+export const summaryColumns = {
   id: listings.id,
   slug: listings.slug,
   name: listings.name,
@@ -32,7 +32,7 @@ const summaryColumns = {
   deletedAt: listings.deletedAt,
 };
 
-type SummaryRow = {
+export type SummaryRow = {
   id: string;
   slug: string;
   name: string;
@@ -53,7 +53,7 @@ type SummaryRow = {
   deletedAt: Date | string | null;
 };
 
-function toIso(value: Date | string | null | undefined): string | null {
+export function toIso(value: Date | string | null | undefined): string | null {
   if (value === null || value === undefined) return null;
   const date = value instanceof Date ? value : new Date(value);
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
@@ -99,35 +99,23 @@ export async function getListingsPayload(): Promise<ListingsPayload> {
   cacheLife("days");
 
   const db = getDb();
-  const [rows, [lastRun]] = await Promise.all([
+  const [rows, lastScrapeAt] = await Promise.all([
     db
       .select(summaryColumns)
       .from(listings)
       .where(isNull(listings.deletedAt))
       .orderBy(asc(listings.id)),
-    db
-      .select({ finishedAt: max(scrapeRuns.finishedAt) })
-      .from(scrapeRuns)
-      .where(and(eq(scrapeRuns.status, "success"), eq(scrapeRuns.partial, false))),
+    queryLastScrapeAt(db),
   ]);
 
-  return {
-    listings: rows.map(toListingSummary),
-    lastScrapeAt: toIso(lastRun?.finishedAt),
-  };
+  return { listings: rows.map(toListingSummary), lastScrapeAt };
 }
 
-/**
- * Listings by id, including soft-deleted ones (`deleted: true`). Not cached: it serves
- * favorites that may no longer be in the main payload. Unknown ids are skipped.
- */
-export async function getListingsByIds(ids: readonly string[]): Promise<ListingSummary[]> {
-  const unique = [...new Set(ids)];
-  if (unique.length === 0) return [];
-  const rows = await getDb()
-    .select(summaryColumns)
-    .from(listings)
-    .where(inArray(listings.id, unique))
-    .orderBy(asc(listings.id));
-  return rows.map(toListingSummary);
+/** ISO `finished_at` of the latest successful, non-partial scrape run (uncached). */
+export async function queryLastScrapeAt(db: Db): Promise<string | null> {
+  const [lastRun] = await db
+    .select({ finishedAt: max(scrapeRuns.finishedAt) })
+    .from(scrapeRuns)
+    .where(and(eq(scrapeRuns.status, "success"), eq(scrapeRuns.partial, false)));
+  return toIso(lastRun?.finishedAt);
 }

@@ -1,0 +1,1 @@
+CREATE INDEX "listings_active_lat_lng_idx" ON "listings" USING btree ("lat","lng") WHERE "listings"."deleted_at" is null and "listings"."lat" is not null;

@@ -12,6 +12,8 @@ zod · vitest · oxlint + oxfmt · Vercel Hobby (region `sin1`).
 - `pnpm dev` / `pnpm format` / `pnpm test`
 - `pnpm scrape --help`: local scraper (reads `.env.local`).
 - `pnpm db:generate` then `pnpm db:migrate`: the only way to change the DB schema.
+- `pnpm perf:measure [--url …] [--runs 3] [--json out.json]`: memory harness (installed Chrome via
+  playwright-core). Measure `pnpm build && pnpm start` or production, never `pnpm dev`.
 
 **Rules**
 
@@ -27,6 +29,8 @@ zod · vitest · oxlint + oxfmt · Vercel Hobby (region `sin1`).
 
 - `app/`: routes and API handlers (`app/api/*`) · `components/{top-bar,map,list,viewer,ui}`
 - `lib/db/`: Drizzle schema + client · `lib/listings/`: queries, types, filters, formatting
+- Data API: `app/api/{pins,listings,listings/no-location}` → `lib/listings/api-query.ts` (cached,
+  tag `listings`), SQL in `api-sql.ts`, shared param parsing in `api-params.ts`
 - `scripts/scrape/`: scraper (fetch, cache, zod schemas, mapping, persist) + fixtures/tests
 - `drizzle/`: generated migrations · `drizzle.config.ts`
 
