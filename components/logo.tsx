@@ -1,31 +1,31 @@
 import { cn } from "cn";
 
-/** Placeholder mark: a house with the Thai letter บ. Plan 11 replaces it with the final mark. */
+/** House silhouette (32×32), the same path as `app/icon.svg`. */
+const HOUSE_PATH =
+  "M16 2.6Q16.9 2.6 17.6 3.2L29.6 13.6Q30.6 14.5 29.9 15.3Q29.5 15.8 28.6 15.8L27 15.8L27 27.4Q27 29.4 25 29.4L7 29.4Q5 29.4 5 27.4L5 15.8L3.4 15.8Q2.5 15.8 2.1 15.3Q1.4 14.5 2.4 13.6L14.4 3.2Q15.1 2.6 16 2.6Z";
+
+/** The Thai letter บ (Noto Sans Thai Looped ExtraBold) as a path, so it never depends on fonts. */
+const BO_PATH =
+  "M15.16 17.29L15.16 25.16L17.89 25.16Q18.76 25.16 19.07 24.80Q19.37 24.45 19.37 23.63L19.37 13.74L23.71 13.74L23.71 24.11Q23.71 26.21 22.62 27.36Q21.53 28.50 19.47 28.50L10.82 28.50L10.82 19.03Q9.58 19 8.93 18.20Q8.29 17.39 8.29 16.26Q8.29 15.11 9.13 14.30Q9.97 13.50 11.47 13.50Q13.05 13.50 14.11 14.41Q15.16 15.32 15.16 17.29M11.34 17.47Q11.89 17.47 12.24 17.17Q12.58 16.87 12.58 16.26Q12.58 15.68 12.24 15.37Q11.89 15.05 11.34 15.05Q10.79 15.05 10.43 15.37Q10.08 15.68 10.08 16.26Q10.08 16.84 10.43 17.16Q10.79 17.47 11.34 17.47";
+
+/** The brand mark (same as the favicon): a terracotta house with a white บ. */
 export function LogoMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" aria-hidden="true" className={cn("size-7", className)}>
-      <path d="M16 3 3 14h4v14h18V14h4L16 3Z" className="fill-rose-600" />
-      <text
-        x="16"
-        y="25"
-        textAnchor="middle"
-        fontSize="14"
-        fontWeight="700"
-        className="fill-white"
-        fontFamily="system-ui, sans-serif"
-      >
-        บ
-      </text>
+    <svg viewBox="0 0 32 32" aria-hidden="true" className={cn("size-7 shrink-0", className)}>
+      <path d={HOUSE_PATH} className="fill-brand" />
+      <path d={BO_PATH} fill="#fff" />
     </svg>
   );
 }
 
-/** Mark plus the "Renthub Map" wordmark. */
+/** Mark plus the "Renthub Map" wordmark (the wordmark is visually hidden on phones). */
 export function Logo({ className }: { className?: string }) {
   return (
     <span className={cn("flex items-center gap-2", className)}>
       <LogoMark />
-      <span className="font-semibold tracking-tight whitespace-nowrap">Renthub Map</span>
+      <span className="font-semibold tracking-tight whitespace-nowrap max-sm:sr-only">
+        Renthub Map
+      </span>
     </span>
   );
 }

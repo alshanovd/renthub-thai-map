@@ -1,10 +1,20 @@
 "use client";
 
 import { cn } from "cn";
+import { SlidersHorizontal } from "lucide-react";
 import { type KeyboardEvent, useId, useState } from "react";
 
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import {
   Select,
   SelectContent,
@@ -26,6 +36,7 @@ import {
   useAppliedSearch,
 } from "@/lib/search-params";
 import { useMapUi } from "@/lib/store";
+import { useIsMobile } from "@/lib/use-media-query";
 
 import { StatusText } from "./status-text";
 
@@ -63,6 +74,10 @@ type TopBarProps = {
 /**
  * Search controls. Mode, max price and call-for-price are a draft applied with Search (or Enter
  * anywhere in the bar); sort applies immediately. The applied search lives in the URL.
+ *
+ * Under `md` the bar collapses (CSS) to the logo, the mode toggle and a "Filters" button that
+ * opens a drawer with the same slider, switch, sort and Search, driven by the same draft. There
+ * the mode toggle applies at once (the slider and Search are hidden in the drawer).
  */
 export function TopBar({ listings, filtered, lastScrapeAt }: TopBarProps) {
   const [applied, setApplied] = useAppliedSearch();
@@ -75,9 +90,11 @@ export function TopBar({ listings, filtered, lastScrapeAt }: TopBarProps) {
     setDraft(appliedDraft);
   }
 
+  const isMobile = useIsMobile();
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const dirty = !sameDraft(draft, appliedDraft);
-  const range = PRICE_RANGE[draft.mode];
   const callId = useId();
+  const drawerCallId = useId();
 
   /** Applies a search; keeps the selection only if it still passes the new filter. */
   const apply = (next: Search) => {
@@ -92,18 +109,59 @@ export function TopBar({ listings, filtered, lastScrapeAt }: TopBarProps) {
     if (dirty) apply({ ...applied, ...draft });
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+  const onModeChange = (value: string) => {
+    if (!isMode(value) || value === draft.mode) return;
+    const max = PRICE_RANGE[value].default;
+    if (isMobile) apply({ ...applied, mode: value, max });
+    else setDraft({ ...draft, mode: value, max });
+  };
+
+  /** Enter applies the draft (`after` runs once it did, e.g. closing the drawer). */
+  const enterApplies = (after?: () => void) => (event: KeyboardEvent<HTMLElement>) => {
     if (event.key !== "Enter" || event.defaultPrevented) return;
     // Ignore events bubbling through portals (the sort menu) and buttons with their own action.
     const target = event.target as HTMLElement;
     if (!event.currentTarget.contains(target) || target.closest("[data-native-enter]")) return;
     event.preventDefault();
     applyDraft();
+    after?.();
   };
 
+  const searchButton = (className?: string, after?: () => void) => (
+    <Button
+      size="sm"
+      variant={dirty ? "default" : "outline"}
+      disabled={!dirty}
+      onClick={() => {
+        applyDraft();
+        after?.();
+      }}
+      data-native-enter
+      className={cn("px-4", dirty && "animate-pulse", className)}
+    >
+      Search
+    </Button>
+  );
+
+  const resetButton = (className?: string) =>
+    isDefaultSearch(applied) ? null : (
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={() => apply(DEFAULT_SEARCH)}
+        data-native-enter
+        className={className}
+      >
+        Reset
+      </Button>
+    );
+
   return (
-    <header className="flex h-14 shrink-0 items-center gap-4 border-b px-4" onKeyDown={onKeyDown}>
-      <Logo className="mr-2" />
+    <header
+      className="flex h-14 shrink-0 items-center gap-2 border-b px-3 md:gap-4 md:px-4"
+      onKeyDown={enterApplies()}
+    >
+      <Logo className="md:mr-2" />
 
       <ToggleGroup
         type="single"
@@ -111,11 +169,7 @@ export function TopBar({ listings, filtered, lastScrapeAt }: TopBarProps) {
         size="sm"
         spacing={0}
         value={draft.mode}
-        onValueChange={(value) => {
-          if (isMode(value) && value !== draft.mode) {
-            setDraft({ ...draft, mode: value, max: PRICE_RANGE[value].default });
-          }
-        }}
+        onValueChange={onModeChange}
         aria-label="Price mode"
       >
         <ToggleGroupItem value="day" className="px-3">
@@ -126,74 +180,138 @@ export function TopBar({ listings, filtered, lastScrapeAt }: TopBarProps) {
         </ToggleGroupItem>
       </ToggleGroup>
 
-      <div className="flex w-44 shrink-0 flex-col gap-1.5">
-        <span className="text-xs font-medium tabular-nums">{maxLabel(draft)}</span>
-        <Slider
-          min={range.min}
-          max={range.max}
-          step={range.step}
-          value={[draft.max === Number.POSITIVE_INFINITY ? range.max : draft.max]}
-          onValueChange={([value]) => {
-            if (value === undefined) return;
-            setDraft({ ...draft, max: value >= range.max ? Number.POSITIVE_INFINITY : value });
-          }}
-          aria-label="Maximum price"
-        />
-      </div>
+      <MaxSlider draft={draft} setDraft={setDraft} className="w-44 max-md:hidden" />
 
-      <div className="flex shrink-0 items-center gap-2">
-        <Switch
-          id={callId}
-          size="sm"
-          checked={draft.call}
-          onCheckedChange={(call) => setDraft({ ...draft, call })}
-        />
-        <label htmlFor={callId} className="text-sm whitespace-nowrap">
-          Include call-for-price
-        </label>
-      </div>
+      <CallSwitch id={callId} draft={draft} setDraft={setDraft} className="max-md:hidden" />
 
-      <Button
-        size="sm"
-        variant={dirty ? "default" : "outline"}
-        disabled={!dirty}
-        onClick={applyDraft}
-        data-native-enter
-        className={cn("px-4", dirty && "animate-pulse")}
-      >
-        Search
-      </Button>
+      {searchButton("max-md:hidden")}
 
-      {!isDefaultSearch(applied) && (
-        <Button size="sm" variant="ghost" onClick={() => apply(DEFAULT_SEARCH)} data-native-enter>
-          Reset
-        </Button>
-      )}
+      {resetButton("max-md:hidden")}
 
-      <Select
-        value={applied.sort}
-        onValueChange={(value) => {
-          if (isSort(value)) setApplied({ ...applied, sort: value });
-        }}
-      >
-        <SelectTrigger size="sm" aria-label="Sort" className="shrink-0">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent position="popper" align="start">
-          {SORT_ORDERS.map((sort) => (
-            <SelectItem key={sort} value={sort}>
-              {SORT_LABELS[sort]}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <SortSelect applied={applied} setApplied={setApplied} className="max-md:hidden" />
 
       <StatusText
         listings={listings}
         filtered={filtered}
         lastScrapeAt={lastScrapeAt}
-        className="ml-auto"
+        className="ml-auto max-md:hidden"
       />
+
+      <Drawer
+        open={filtersOpen}
+        onOpenChange={(open) => {
+          setFiltersOpen(open);
+          // Closing without Search drops the unsaved draft.
+          if (!open) setDraft(appliedDraft);
+        }}
+      >
+        <DrawerTrigger asChild>
+          <Button size="sm" variant="outline" className="relative ml-auto md:hidden">
+            <SlidersHorizontal aria-hidden />
+            Filters
+            {isDefaultSearch(applied) ? null : (
+              <span
+                aria-label="(active)"
+                className="absolute -top-1 -right-1 size-2.5 rounded-full bg-brand ring-2 ring-background"
+              />
+            )}
+          </Button>
+        </DrawerTrigger>
+        <DrawerContent onKeyDown={enterApplies(() => setFiltersOpen(false))}>
+          <DrawerHeader className="pb-2">
+            <DrawerTitle>Filters</DrawerTitle>
+            <DrawerDescription>
+              {draft.mode === "month" ? "Monthly" : "Daily"} prices. Switch the mode in the top bar.
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="flex flex-col gap-5 px-4 py-2">
+            <MaxSlider draft={draft} setDraft={setDraft} />
+            <CallSwitch id={drawerCallId} draft={draft} setDraft={setDraft} />
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm">Sort</span>
+              <SortSelect applied={applied} setApplied={setApplied} />
+            </div>
+          </div>
+          <DrawerFooter className="flex-row">
+            {resetButton("h-9 flex-1")}
+            {searchButton("h-9 flex-1", () => setFiltersOpen(false))}
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </header>
+  );
+}
+
+type DraftProps = {
+  draft: SearchDraft;
+  setDraft: (draft: SearchDraft) => void;
+  className?: string;
+};
+
+/** `Max ฿800 / day` label and the slider for the draft's mode. */
+function MaxSlider({ draft, setDraft, className }: DraftProps) {
+  const range = PRICE_RANGE[draft.mode];
+  return (
+    <div className={cn("flex shrink-0 flex-col gap-1.5", className)}>
+      <span className="text-xs font-medium tabular-nums">{maxLabel(draft)}</span>
+      <Slider
+        min={range.min}
+        max={range.max}
+        step={range.step}
+        value={[draft.max === Number.POSITIVE_INFINITY ? range.max : draft.max]}
+        onValueChange={([value]) => {
+          if (value === undefined) return;
+          setDraft({ ...draft, max: value >= range.max ? Number.POSITIVE_INFINITY : value });
+        }}
+        aria-label="Maximum price"
+      />
+    </div>
+  );
+}
+
+function CallSwitch({ id, draft, setDraft, className }: DraftProps & { id: string }) {
+  return (
+    <div className={cn("flex shrink-0 items-center gap-2", className)}>
+      <Switch
+        id={id}
+        size="sm"
+        checked={draft.call}
+        onCheckedChange={(call) => setDraft({ ...draft, call })}
+      />
+      <label htmlFor={id} className="text-sm whitespace-nowrap">
+        Include call-for-price
+      </label>
+    </div>
+  );
+}
+
+/** Sort applies immediately (no draft). */
+function SortSelect({
+  applied,
+  setApplied,
+  className,
+}: {
+  applied: Search;
+  setApplied: (search: Search) => void;
+  className?: string;
+}) {
+  return (
+    <Select
+      value={applied.sort}
+      onValueChange={(value) => {
+        if (isSort(value)) setApplied({ ...applied, sort: value });
+      }}
+    >
+      <SelectTrigger size="sm" aria-label="Sort" className={cn("shrink-0", className)}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent position="popper" align="start">
+        {SORT_ORDERS.map((sort) => (
+          <SelectItem key={sort} value={sort}>
+            {SORT_LABELS[sort]}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

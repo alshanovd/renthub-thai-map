@@ -14,7 +14,7 @@ type PhotoCarouselProps = {
 };
 
 const arrowClass =
-  "absolute top-1/2 z-10 flex size-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutral-900 shadow ring-1 ring-black/10 transition-opacity hover:bg-white focus-visible:opacity-100 opacity-0 group-hover/photo:opacity-100 [@media(hover:none)]:opacity-100";
+  "absolute top-1/2 z-10 flex size-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutral-900 shadow ring-1 ring-black/10 transition-opacity hover:bg-white focus-visible:opacity-100 opacity-0 group-hover/photo:opacity-100 max-md:opacity-100 [@media(hover:none)]:opacity-100";
 
 /**
  * 4:3 thumbnail carousel. Only the current photo and its neighbours are mounted (the next one

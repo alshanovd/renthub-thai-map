@@ -28,7 +28,7 @@ const renderer: Renderer = {
     const size = Math.round(32 + Math.min(20, Math.log2(count) * 4));
     const content = document.createElement("div");
     content.className =
-      "flex items-center justify-center rounded-full bg-neutral-900/90 text-xs font-semibold text-white shadow-lg ring-4 ring-neutral-900/20 transition-transform hover:scale-110";
+      "flex items-center justify-center rounded-full border-2 border-white/80 bg-neutral-900 text-xs font-semibold text-white shadow-lg ring-4 ring-neutral-900/15 transition-transform hover:scale-110";
     content.style.width = `${String(size)}px`;
     content.style.height = `${String(size)}px`;
     content.style.transform = "translateY(50%)";

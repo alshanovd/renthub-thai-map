@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Heart, ImageOff, XIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink, Heart, ImageOff, XIcon } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { type PointerEvent, useCallback, useEffect, useRef, useState } from "react";
 
@@ -69,6 +69,8 @@ export function ImageViewer({ listingsById }: ImageViewerProps) {
           onCloseAutoFocus={onCloseAutoFocus}
           className={cn(
             "fixed top-1/2 left-1/2 z-50 flex h-[92dvh] w-[95vw] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl bg-neutral-950 text-white shadow-2xl ring-1 ring-white/10 outline-none",
+            // Phones: edge to edge.
+            "max-md:h-dvh max-md:w-screen max-md:rounded-none max-md:ring-0",
             "duration-150 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           )}
         >
@@ -139,8 +141,8 @@ function ViewerBody({ listing, index: rawIndex }: { listing: ListingSummary; ind
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="flex shrink-0 items-center gap-2 border-b border-white/10 py-2 pr-2 pl-4">
-        <div className="flex min-w-0 flex-1 items-baseline gap-3">
+      <header className="flex shrink-0 items-center gap-2 border-b border-white/10 py-2 pr-2 pl-4 max-[400px]:gap-1 max-[400px]:pl-3">
+        <div className="flex min-w-0 flex-1 items-baseline gap-3 max-[400px]:gap-2">
           <DialogTitle className="truncate text-base font-medium text-white">
             {listing.name}
           </DialogTitle>
@@ -171,9 +173,12 @@ function ViewerBody({ listing, index: rawIndex }: { listing: ListingSummary; ind
           href={listingUrl(listing.slug)}
           target="_blank"
           rel="noopener noreferrer"
-          className="shrink-0 rounded-full px-3 py-1.5 text-sm font-medium text-white hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:outline-none"
+          aria-label="Open on renthub"
+          className="flex shrink-0 items-center justify-center rounded-full px-3 py-1.5 text-sm font-medium text-white hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:outline-none max-[400px]:size-9 max-[400px]:p-0"
         >
-          Open on renthub ↗
+          {/* Under 400px only the icon fits next to the name. */}
+          <span className="max-[400px]:hidden">Open on renthub ↗</span>
+          <ExternalLink className="size-5 min-[401px]:hidden" aria-hidden />
         </a>
         <DialogPrimitive.Close className={roundButton} aria-label="Close">
           <XIcon className="size-5" aria-hidden />

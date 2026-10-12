@@ -68,10 +68,12 @@ function PricePinImpl({ listing, mode, favorite, selected, setMarkerRef }: Price
         <div
           className={cn(
             "relative rounded-full border px-2 py-0.5 text-xs font-semibold whitespace-nowrap shadow-md transition-[transform,background-color,color,box-shadow] duration-100",
-            "border-neutral-300 bg-white text-neutral-900 group-hover:scale-105 group-hover:shadow-lg",
-            highlighted && "border-rose-500 ring-2 ring-rose-500",
-            selected && "scale-115 border-rose-600 bg-rose-600 px-2.5 py-1 text-sm text-white",
-            greyed && "border-neutral-300 bg-neutral-200 text-neutral-500 line-through",
+            "border-white/70 bg-neutral-900 text-white group-hover:scale-105 group-hover:bg-neutral-700 group-hover:shadow-lg",
+            highlighted && "bg-neutral-700 ring-2 ring-brand",
+            selected &&
+              "scale-115 border-white bg-brand px-2.5 py-1 text-sm text-white group-hover:bg-brand",
+            greyed &&
+              "border-white/60 bg-neutral-500 text-neutral-100 line-through opacity-75 group-hover:bg-neutral-500",
           )}
         >
           {label}
@@ -86,9 +88,10 @@ function PricePinImpl({ listing, mode, favorite, selected, setMarkerRef }: Price
         </div>
         <div
           className={cn(
-            "absolute bottom-0.5 size-2 rotate-45 border-r border-b border-neutral-300 bg-white",
-            selected && "border-rose-600 bg-rose-600",
-            greyed && "bg-neutral-200",
+            "absolute bottom-0.5 size-2 rotate-45 border-r border-b border-white/70 bg-neutral-900 group-hover:bg-neutral-700",
+            highlighted && "bg-neutral-700",
+            selected && "border-white bg-brand group-hover:bg-brand",
+            greyed && "bg-neutral-500 opacity-75 group-hover:bg-neutral-500",
           )}
         />
       </div>

@@ -68,8 +68,8 @@ function ListingCardImpl({
       className={cn(
         "relative flex cursor-pointer flex-col gap-1.5 rounded-xl p-1.5 transition-colors",
         "hover:bg-muted/70",
-        pinHovered && "bg-rose-50 hover:bg-rose-50",
-        selected && "bg-rose-50/60 ring-2 ring-rose-600",
+        pinHovered && "bg-brand/10 hover:bg-brand/10",
+        selected && "bg-brand/5 ring-2 ring-brand",
         listing.deleted && "opacity-60 grayscale",
       )}
       onClick={onClick}

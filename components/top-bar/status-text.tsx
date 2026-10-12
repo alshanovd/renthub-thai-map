@@ -36,11 +36,19 @@ type StatusTextProps = {
   listings: readonly ListingSummary[];
   filtered: readonly ListingSummary[];
   lastScrapeAt: string | null;
+  /** One row (`124 in view · 228 total` left, `Updated …` right) for the mobile sheet. */
+  inline?: boolean;
   className?: string;
 };
 
 /** `124 in view · 228 total` (the On map tab's count) and `Updated 3 hours ago`. */
-export function StatusText({ listings, filtered, lastScrapeAt, className }: StatusTextProps) {
+export function StatusText({
+  listings,
+  filtered,
+  lastScrapeAt,
+  inline = false,
+  className,
+}: StatusTextProps) {
   const bounds = useMapUi((s) => s.bounds);
   const now = useNow();
   const inView = useMemo(
@@ -51,7 +59,8 @@ export function StatusText({ listings, filtered, lastScrapeAt, className }: Stat
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-col items-end text-xs leading-tight text-muted-foreground",
+        "flex min-w-0 text-xs leading-tight text-muted-foreground",
+        inline ? "flex-row items-center justify-between gap-2" : "flex-col items-end",
         className,
       )}
     >
@@ -67,7 +76,7 @@ export function StatusText({ listings, filtered, lastScrapeAt, className }: Stat
             </span>
           </TooltipTrigger>
           {lastScrapeAt !== null && (
-            <TooltipContent side="bottom" align="end">
+            <TooltipContent side={inline ? "top" : "bottom"} align="end">
               Last scrape: {absoluteFormat.format(new Date(lastScrapeAt))}
             </TooltipContent>
           )}

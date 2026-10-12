@@ -1,6 +1,11 @@
 "use client";
 
-import { APIProvider, Map as GoogleMap, type MapEvent } from "@vis.gl/react-google-maps";
+import {
+  APIProvider,
+  ControlPosition,
+  Map as GoogleMap,
+  type MapEvent,
+} from "@vis.gl/react-google-maps";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import type { PriceMode } from "@/lib/listings/types";
@@ -25,13 +30,17 @@ type ListingsMapProps = {
   pins: readonly PinListing[];
   mode: PriceMode;
   favoriteIds: ReadonlySet<string>;
+  /** Mobile layout: the list sheet covers the bottom, so the zoom control moves to the top. */
+  compact?: boolean;
 };
+
+const ZOOM_TOP = { position: ControlPosition.RIGHT_TOP };
 
 /**
  * Uncontrolled Google Map (only `defaultCenter`/`defaultZoom`, never `center`/`zoom`), so the
  * app never fights the user's camera. Reports the visible bounds to the store on `idle`.
  */
-export function ListingsMap({ pins, mode, favoriteIds }: ListingsMapProps) {
+export function ListingsMap({ pins, mode, favoriteIds, compact = false }: ListingsMapProps) {
   const setBounds = useMapUi((s) => s.setBounds);
   const selectedId = useMapUi((s) => s.selectedId);
   const select = useMapUi((s) => s.select);
@@ -73,6 +82,7 @@ export function ListingsMap({ pins, mode, favoriteIds }: ListingsMapProps) {
         gestureHandling="greedy"
         disableDefaultUI
         zoomControl
+        zoomControlOptions={compact ? ZOOM_TOP : undefined}
         clickableIcons={false}
         onIdle={onIdle}
         onClick={onMapClick}

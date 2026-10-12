@@ -42,6 +42,12 @@ export type MapUiState = {
   viewer: ViewerTarget | null;
   openViewer: (listingId: string, index: number) => void;
   closeViewer: () => void;
+  /**
+   * Pixels of the map covered at the bottom by the mobile list sheet (0 on desktop). Camera moves
+   * (selection pan, favorites fit) keep their target above it.
+   */
+  mapInsetBottom: number;
+  setMapInsetBottom: (px: number) => void;
 };
 
 /** Single source of truth for interactive map/list UI state. */
@@ -71,4 +77,6 @@ export const useMapUi = create<MapUiState>()((set) => ({
   viewer: null,
   openViewer: (listingId, index) => set({ viewer: { listingId, index } }),
   closeViewer: () => set({ viewer: null }),
+  mapInsetBottom: 0,
+  setMapInsetBottom: (mapInsetBottom) => set({ mapInsetBottom }),
 }));
