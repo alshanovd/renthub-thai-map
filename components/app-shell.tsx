@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 
 import { ListingsMap } from "@/components/map/listings-map";
 import type { PinListing } from "@/components/map/price-pin";
 import { ListPanel } from "@/components/list/list-panel";
+import { SelectionUrlSync } from "@/components/selection-url-sync";
 import { TopBar } from "@/components/top-bar/top-bar";
 import { applySearch, DEFAULT_SEARCH, hasLocation } from "@/lib/listings/filter";
 import type { ListingsPayload } from "@/lib/listings/types";
@@ -15,6 +16,7 @@ const search = DEFAULT_SEARCH;
 
 /** Favorites arrive in plan 10; until then nobody has any. */
 const NO_FAVORITES: ReadonlySet<string> = new Set();
+const NO_FAVORITE_IDS: readonly string[] = [];
 
 /** Which pins the map draws for the active list tab. */
 function pinsForTab(
@@ -47,10 +49,19 @@ export function AppShell({ payload }: { payload: ListingsPayload }) {
 
   return (
     <div className="flex h-dvh flex-col">
+      {/* `?id=` sync reads the URL on the client; Suspense keeps the rest of `/` prerendered. */}
+      <Suspense fallback={null}>
+        <SelectionUrlSync />
+      </Suspense>
       <TopBar resultCount={filtered.length} />
       <div className="flex min-h-0 flex-1">
-        <aside className="w-[420px] shrink-0 overflow-y-auto border-r">
-          <ListPanel listings={filtered} selected={selected} />
+        <aside className="flex w-[420px] shrink-0 flex-col border-r">
+          <ListPanel
+            listings={payload.listings}
+            filtered={filtered}
+            mode={search.mode}
+            favoriteIds={NO_FAVORITE_IDS}
+          />
         </aside>
         <main className="relative min-w-0 flex-1">
           <ListingsMap pins={pins} mode={search.mode} favoriteIds={NO_FAVORITES} />

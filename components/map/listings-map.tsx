@@ -9,6 +9,7 @@ import { useMapUi } from "@/lib/store";
 import { ClusteredPins } from "./clusterer";
 import { PinPreview } from "./pin-preview";
 import type { PinListing } from "./price-pin";
+import { SelectionPan } from "./selection-pan";
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAP_ID || "DEMO_MAP_ID";
@@ -32,6 +33,7 @@ type ListingsMapProps = {
 export function ListingsMap({ pins, mode, favoriteIds }: ListingsMapProps) {
   const setBounds = useMapUi((s) => s.setBounds);
   const selectedId = useMapUi((s) => s.selectedId);
+  const select = useMapUi((s) => s.select);
   const boundsTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => () => clearTimeout(boundsTimer.current), []);
@@ -46,6 +48,9 @@ export function ListingsMap({ pins, mode, favoriteIds }: ListingsMapProps) {
     },
     [setBounds],
   );
+
+  /** A click on the empty map (not on a pin, cluster or popover) clears the selection. */
+  const onMapClick = useCallback(() => select(null, null), [select]);
 
   const pinsById = useMemo(() => new Map(pins.map((pin) => [pin.id, pin])), [pins]);
 
@@ -69,9 +74,11 @@ export function ListingsMap({ pins, mode, favoriteIds }: ListingsMapProps) {
         zoomControl
         clickableIcons={false}
         onIdle={onIdle}
+        onClick={onMapClick}
       >
         <ClusteredPins pins={pins} mode={mode} favoriteIds={favoriteIds} selectedId={selectedId} />
         <PinPreview pinsById={pinsById} mode={mode} />
+        <SelectionPan pinsById={pinsById} />
       </GoogleMap>
     </APIProvider>
   );
